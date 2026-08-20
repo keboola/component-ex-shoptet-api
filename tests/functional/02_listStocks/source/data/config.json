@@ -1,0 +1,8 @@
+{
+  "action": "listStocks",
+  "parameters": {
+    "auth_type": "private_token",
+    "#private_api_token": "DUMMY_TOKEN",
+    "api_base_url": "https://api.docs.shoptet.com/_mock/shoptet-api/openapi"
+  }
+}

@@ -190,20 +190,81 @@ There is no self-service sandbox. Ranked by effort:
 
 ### Current test coverage
 
-Today's test suite is `tests/test_client.py` (HTTP concerns — auth, throttling, retries,
-pagination, snapshot polling — against a stub `requests.Session`), `tests/test_component.py`
-(config-in, CSV-and-manifest-out, against the same stub session), `tests/test_configuration.py`
-and `tests/test_registry_invariants.py` (every declared primary-key column and child field
-checked against a vendored extract of the real Shoptet response schemas). All of it runs
-offline, with no Shoptet account or mock-server access needed.
+`tests/test_client.py` (HTTP concerns — auth, throttling, retries, pagination, snapshot
+polling — against a stub `requests.Session`), `tests/test_component.py` (config-in,
+CSV-and-manifest-out, against the same stub session), `tests/test_configuration.py` and
+`tests/test_registry_invariants.py` (every declared primary-key column and child field
+checked against a vendored extract of the real Shoptet response schemas) run offline, with
+no Shoptet account or mock-server access needed.
 
-`tests/test_functional.py` wires up a VCR-based (`keboola.datadirtest.vcr.VCRDataDirTester`)
-end-to-end harness, but no cassettes are recorded yet — `tests/functional/` does not exist.
-Recording them is a later phase's job: record against the documentation mock server for the
-paginated / list / single objects, and note that the `SNAPSHOT`-mode objects (see the mock-server
-limitation above) will stay covered only by the unit tests' stubbed responses until a real
-Shoptet token is available to record against — the mock server's `resultUrl` host does not
-resolve, so there is no way to record a snapshot cassette against it.
+`tests/test_functional.py` runs a recorded, passing VCR suite (`tests/functional/`, cassettes
+under `keboola.datadirtest.vcr.VCRDataDirTester`) against the documentation mock server
+(`https://api.docs.shoptet.com/_mock/shoptet-api/openapi`) with a dummy `#private_api_token` —
+real HTTP recordings, not hand-written cassettes. It covers:
+
+- **All five sync actions** — `testConnection`, `listStocks`, `listPriceLists`,
+  `listIncludeSections` (for `orders`), `listApprovedEndpoints`.
+- **Every recordable fetch mode** — `PAGINATED` (`categories`, `brands`), `LIST` (`stocks`,
+  `customer_groups`), `SINGLE` (`eshop`, whose empty primary key is by design), `PER_STOCK`
+  (`stock_movements`, both fanned out over every stock and pinned via `stock_id`).
+- **The child-table split** — `variant_parameters`' nested `values` array becomes
+  `variant_parameters_values.csv` keyed by `parameter_id` + `_row_number`; a paired test with
+  `extract_child_tables: false` proves the same array instead stays inline as a JSON-string
+  column with no child table produced.
+- **A change feed** (`orders_changes`) — one test proves the mandatory `from` window is
+  synthesised on a first run with no previous state; a second, chained test
+  (`tests/functional/15_16_orders_changes_chain/`) proves a previous run's real watermark minus
+  `lookback_hours` reaches the `from` query string on the next run. It has to be a *chained*
+  datadirtest (`out/state.json` of one sub-test threaded live into `in/state.json` of the next,
+  at both record and replay time) rather than two independent tests with a committed
+  `in/state.json` seed, because a standalone test's `in/state.json` is unconditionally reset to
+  `{}` in `setUp` — a merely-committed seed would never actually reach the component on replay.
+- **Four failure paths**, each asserted to fail before any HTTP call: missing credentials,
+  a row with no `object` selected, an `include` section unknown to the chosen object, and
+  `addon_oauth` without `oauth_token_url`.
+
+**What it does not cover, and why:**
+
+- **Every `SNAPSHOT`-mode object** — `orders`, `order_history`, `products`,
+  `product_pricelist_prices`, `customers`, `invoices`, `proforma_invoices`, `credit_notes`,
+  `delivery_notes`, `proof_payments`, `abandoned_carts` — cannot be recorded against the mock
+  server (see the limitation above: the completed job's `resultUrl` points at a host that does
+  not resolve, so the download fails after retries). Recording one anyway would mean either a
+  functional test that reliably fails, or a hand-crafted cassette faking the JSONL download —
+  neither is acceptable. These stay covered only by `tests/test_component.py`'s stubbed-session
+  unit tests until a real Shoptet token is available.
+- **`abandoned_carts`' `full_load_only` guard** (an incremental-load row is forced to a full
+  load, with a warning) is not a functional test either, for the same reason: `abandoned_carts`
+  is itself `SNAPSHOT`-mode, so recording it hits the unresolvable-`resultUrl` limit above before
+  the guard's effect could ever be observed end-to-end. Covered by
+  `tests/test_component.py`'s stubbed-session tests instead.
+- **`stock_supplies`** is left out of the recorded suite for an unrelated reason: its primary
+  key includes a `code` field, and `keboola.datadirtest`'s recording pipeline always layers its
+  own baseline sanitizer — which redacts *any* JSON key literally named `code` (an
+  OAuth-authorization-code heuristic) — ahead of whatever this component declares in
+  `VCR_SANITIZERS`, corrupting that field in the cassette while the `expected/` output (captured
+  from the live, unsanitized response at record time) keeps the real value, so replay
+  deterministically diverges from `expected/`. `stock_movements` (no `code` field) is used for
+  both `PER_STOCK` variants instead. `eshop` and `orders_changes` hit the same collision on
+  fields that could not be swapped out (`currencies[].code`/`languages[].code`, and the change
+  feed's own identifier) — see `tests/setup/record_code_safe.py` for the sanitizer-patch
+  workaround used to record those two anyway (this component's OAuth flow never carries a
+  real OAuth "code" grant parameter, so excluding "code" from the redacted-field set for
+  recording never risks leaking an actual secret).
+- Only a representative object was recorded per fetch mode / change feed, not all ~56
+  `ObjectType` values — the remaining `PAGINATED`/`LIST` reference-data objects share the exact
+  same code paths as the ones recorded here and are already schema-checked by
+  `tests/test_registry_invariants.py`.
+
+**Once a real Shoptet token (private API or addon OAuth) is available:** put it in a
+gitignored `secrets.json` (see `references/vcr-quickstart.md` in the `component-test` skill for
+the format), point `api_base_url` at the real e-shop or drop it for the production default, and
+re-record the missing objects with
+`uv run python -m keboola.datadirtest scaffold --secrets secrets.json --regenerate`. The
+`SNAPSHOT` objects and `abandoned_carts`' guard can then be recorded normally — a real e-shop's
+`resultUrl` resolves. `stock_supplies`, `eshop` and `orders_changes` will still need the
+`record_code_safe.py` sanitizer patch (or a fix upstream in `keboola.vcr`'s baseline
+sanitizer), since the `code`-field collision is unrelated to credential authenticity.
 
 Development
 -----------

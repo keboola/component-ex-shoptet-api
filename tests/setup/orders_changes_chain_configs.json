@@ -1,0 +1,32 @@
+[
+  {
+    "name": "01_default_window",
+    "description": "[Part of the 15_16_orders_changes_chain chained test] Change feed on a first run: no previous state, so the component must synthesise the default 7-day `from` window itself. `from` is otherwise a mandatory query parameter the mock rejects with 400 when absent. Scaffolded with --output tests/functional/15_16_orders_changes_chain and --chain-state so this test's real out/state.json is threaded live into the next test's in/state.json by the datadirtest chaining mechanism (see DataDirTester._is_chained_test / TestChainedDatadirTest) — a standalone (non-chained) test's in/state.json is always reset to {} in setUp, so a committed static seed alone cannot prove watermark arithmetic through a full record+replay cycle.",
+    "config": {
+      "action": "run",
+      "parameters": {
+        "auth_type": "private_token",
+        "#private_api_token": "DUMMY_TOKEN",
+        "api_base_url": "https://api.docs.shoptet.com/_mock/shoptet-api/openapi",
+        "object": "orders_changes",
+        "load_type": "incremental_load",
+        "lookback_hours": 5
+      }
+    }
+  },
+  {
+    "name": "02_incremental_watermark",
+    "description": "[Part of the 15_16_orders_changes_chain chained test] Change feed on a second run, chained from 01_default_window's real out/state.json. Proves the watermark minus lookback_hours (5h) reaches the `from` query string instead of the default window.",
+    "config": {
+      "action": "run",
+      "parameters": {
+        "auth_type": "private_token",
+        "#private_api_token": "DUMMY_TOKEN",
+        "api_base_url": "https://api.docs.shoptet.com/_mock/shoptet-api/openapi",
+        "object": "orders_changes",
+        "load_type": "incremental_load",
+        "lookback_hours": 5
+      }
+    }
+  }
+]

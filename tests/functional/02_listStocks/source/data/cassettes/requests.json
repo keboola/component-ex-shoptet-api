@@ -1,0 +1,7 @@
+{
+  "_metadata": {"component_run_duration_seconds": 0.609, "component_run_ended_at": "2026-08-20T16:43:01.812145+00:00", "component_run_started_at": "2026-08-20T16:43:01.203012+00:00", "freeze_time": "2026-08-20T12:00:00", "keboola_vcr_version": "0.7.1", "recorded_at": "2026-08-20T16:43:01.813642+00:00", "recording_duration_seconds": 0.0, "recording_ended_at": "2026-08-20T16:43:01.810086+00:00", "recording_started_at": "2026-08-20T16:43:01.810086+00:00", "request_pairs": 1},
+  "interactions": [
+    {"request": {"body": null, "headers": {"Accept": ["*/*"], "Content-Type": ["application/json"]}, "method": "GET", "uri": "https://api.docs.shoptet.com/_mock/shoptet-api/openapi/api/stocks"}, "response": {"body": {"string": "{\"data\":{\"stocks\":[{\"id\":1,\"title\":\"Main stock\",\"isDeliveryPoint\":false,\"visibleOnEshop\":true,\"deliveryPointTitle\":\"Main delivery point\",\"deliveryPointAddress\":\"Main street 123, Prague\"}],\"defaultStockId\":0},\"errors\":[{\"errorCode\":\"example-error-code\",\"message\":\"Example error message\",\"instance\":\"instance\"}],\"metadata\":{\"requestId\":\"019c8c34-64f3-7328-af43-bf1e34fa39d7\"}}"}, "headers": {"Content-Type": ["application/json"]}, "status": {"code": 200, "message": "OK"}}}
+  ],
+  "version": 1
+}

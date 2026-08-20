@@ -1,0 +1,11 @@
+{
+  "action": "run",
+  "parameters": {
+    "auth_type": "addon_oauth",
+    "#oauth_access_token": "DUMMY_OAUTH_TOKEN",
+    "oauth_token_url": "",
+    "api_base_url": "https://api.docs.shoptet.com/_mock/shoptet-api/openapi",
+    "object": "orders",
+    "load_type": "full_load"
+  }
+}

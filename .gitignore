@@ -17,7 +17,11 @@ venv
 secrets.json
 # Only test *output* is regenerated per-run; input fixtures (source/data/in/**,
 # incl. state.json seeds) are committed so CI/fresh clones reproduce the cases.
+# The double pattern also covers "chained" test containers, which nest one more
+# directory level (e.g. tests/functional/15_16_orders_changes_chain/01_.../source/...).
 tests/functional/*/source/data/out/
+tests/functional/*/*/source/data/out/
 
 # VCR: never commit merged real secrets
 tests/functional/*/source/data/config.secrets.json
+tests/functional/*/*/source/data/config.secrets.json

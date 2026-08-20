@@ -1,0 +1,7 @@
+{
+  "_metadata": {"component_run_duration_seconds": 0.008, "component_run_ended_at": "2026-08-20T16:43:23.343809+00:00", "component_run_started_at": "2026-08-20T16:43:23.335686+00:00", "freeze_time": "2026-08-20T12:00:00", "keboola_vcr_version": "0.7.1", "recorded_at": "2026-08-20T16:43:23.344155+00:00", "recording_duration_seconds": null, "recording_ended_at": null, "recording_started_at": null, "request_pairs": 0},
+  "interactions": [
+
+  ],
+  "version": 1
+}

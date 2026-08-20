@@ -1,0 +1,265 @@
+[
+  {
+    "name": "01_testConnection",
+    "description": "testConnection sync action against the Shoptet OpenAPI mock server with a dummy private token.",
+    "config": {
+      "action": "testConnection",
+      "parameters": {
+        "auth_type": "private_token",
+        "#private_api_token": "DUMMY_TOKEN",
+        "api_base_url": "https://api.docs.shoptet.com/_mock/shoptet-api/openapi"
+      }
+    }
+  },
+  {
+    "name": "02_listStocks",
+    "description": "listStocks sync action — populates the Stock dropdown from /api/stocks.",
+    "config": {
+      "action": "listStocks",
+      "parameters": {
+        "auth_type": "private_token",
+        "#private_api_token": "DUMMY_TOKEN",
+        "api_base_url": "https://api.docs.shoptet.com/_mock/shoptet-api/openapi"
+      }
+    }
+  },
+  {
+    "name": "03_listPriceLists",
+    "description": "listPriceLists sync action from /api/pricelists.",
+    "config": {
+      "action": "listPriceLists",
+      "parameters": {
+        "auth_type": "private_token",
+        "#private_api_token": "DUMMY_TOKEN",
+        "api_base_url": "https://api.docs.shoptet.com/_mock/shoptet-api/openapi"
+      }
+    }
+  },
+  {
+    "name": "04_listIncludeSections",
+    "description": "listIncludeSections sync action for object=orders — must return the six documented snapshot sections without any HTTP call (registry lookup only).",
+    "config": {
+      "action": "listIncludeSections",
+      "parameters": {
+        "auth_type": "private_token",
+        "#private_api_token": "DUMMY_TOKEN",
+        "api_base_url": "https://api.docs.shoptet.com/_mock/shoptet-api/openapi",
+        "object": "orders"
+      }
+    }
+  },
+  {
+    "name": "05_listApprovedEndpoints",
+    "description": "listApprovedEndpoints sync action from /api/system/endpoints?status=approved.",
+    "config": {
+      "action": "listApprovedEndpoints",
+      "parameters": {
+        "auth_type": "private_token",
+        "#private_api_token": "DUMMY_TOKEN",
+        "api_base_url": "https://api.docs.shoptet.com/_mock/shoptet-api/openapi"
+      }
+    }
+  },
+  {
+    "name": "06_categories_paginated",
+    "description": "FetchMode.PAGINATED — /api/categories, keyed on guid.",
+    "config": {
+      "action": "run",
+      "parameters": {
+        "auth_type": "private_token",
+        "#private_api_token": "DUMMY_TOKEN",
+        "api_base_url": "https://api.docs.shoptet.com/_mock/shoptet-api/openapi",
+        "object": "categories",
+        "load_type": "full_load"
+      }
+    }
+  },
+  {
+    "name": "07_brands_paginated",
+    "description": "FetchMode.PAGINATED — /api/brands, keyed on guid (regression coverage for the ba828e5 fix: the list response has no `code` field at all).",
+    "config": {
+      "action": "run",
+      "parameters": {
+        "auth_type": "private_token",
+        "#private_api_token": "DUMMY_TOKEN",
+        "api_base_url": "https://api.docs.shoptet.com/_mock/shoptet-api/openapi",
+        "object": "brands",
+        "load_type": "full_load"
+      }
+    }
+  },
+  {
+    "name": "08_stocks_list",
+    "description": "FetchMode.LIST — /api/stocks, single response carrying the whole array.",
+    "config": {
+      "action": "run",
+      "parameters": {
+        "auth_type": "private_token",
+        "#private_api_token": "DUMMY_TOKEN",
+        "api_base_url": "https://api.docs.shoptet.com/_mock/shoptet-api/openapi",
+        "object": "stocks",
+        "load_type": "full_load"
+      }
+    }
+  },
+  {
+    "name": "09_customer_groups_list",
+    "description": "FetchMode.LIST — /api/customers/groups, keyed on id (regression coverage for the ba828e5 fix: there is no `guid` field on this response).",
+    "config": {
+      "action": "run",
+      "parameters": {
+        "auth_type": "private_token",
+        "#private_api_token": "DUMMY_TOKEN",
+        "api_base_url": "https://api.docs.shoptet.com/_mock/shoptet-api/openapi",
+        "object": "customer_groups",
+        "load_type": "full_load"
+      }
+    }
+  },
+  {
+    "name": "10_eshop_single",
+    "description": "FetchMode.SINGLE — /api/eshop, one settings record with an empty primary key by design (always fully overwritten).",
+    "config": {
+      "action": "run",
+      "parameters": {
+        "auth_type": "private_token",
+        "#private_api_token": "DUMMY_TOKEN",
+        "api_base_url": "https://api.docs.shoptet.com/_mock/shoptet-api/openapi",
+        "object": "eshop",
+        "load_type": "full_load"
+      }
+    }
+  },
+  {
+    "name": "11_stock_movements_per_stock_all",
+    "description": "FetchMode.PER_STOCK fanned out over every stock — stock_id left empty so the component first resolves stock ids from /api/stocks, then reads /api/stocks/{id}/movements.",
+    "config": {
+      "action": "run",
+      "parameters": {
+        "auth_type": "private_token",
+        "#private_api_token": "DUMMY_TOKEN",
+        "api_base_url": "https://api.docs.shoptet.com/_mock/shoptet-api/openapi",
+        "object": "stock_movements",
+        "load_type": "full_load",
+        "stock_id": ""
+      }
+    }
+  },
+  {
+    "name": "12_stock_movements_per_stock_pinned",
+    "description": "FetchMode.PER_STOCK pinned to one stock via stock_id — skips the /api/stocks lookup and reads /api/stocks/1/movements directly.",
+    "config": {
+      "action": "run",
+      "parameters": {
+        "auth_type": "private_token",
+        "#private_api_token": "DUMMY_TOKEN",
+        "api_base_url": "https://api.docs.shoptet.com/_mock/shoptet-api/openapi",
+        "object": "stock_movements",
+        "load_type": "full_load",
+        "stock_id": "1"
+      }
+    }
+  },
+  {
+    "name": "13_variant_parameters_child_tables",
+    "description": "Child-table split: variant_parameters' nested `values` array becomes variant_parameters_values.csv keyed by parameter_id + _row_number (extract_child_tables=true, the default).",
+    "config": {
+      "action": "run",
+      "parameters": {
+        "auth_type": "private_token",
+        "#private_api_token": "DUMMY_TOKEN",
+        "api_base_url": "https://api.docs.shoptet.com/_mock/shoptet-api/openapi",
+        "object": "variant_parameters",
+        "load_type": "full_load",
+        "extract_child_tables": true
+      }
+    }
+  },
+  {
+    "name": "14_variant_parameters_inline_json",
+    "description": "Same object with extract_child_tables=false — the `values` array must stay inline as a JSON-string column and no _values child table should be produced.",
+    "config": {
+      "action": "run",
+      "parameters": {
+        "auth_type": "private_token",
+        "#private_api_token": "DUMMY_TOKEN",
+        "api_base_url": "https://api.docs.shoptet.com/_mock/shoptet-api/openapi",
+        "object": "variant_parameters",
+        "load_type": "full_load",
+        "extract_child_tables": false
+      }
+    }
+  },
+  {
+    "name": "17_missing_credentials",
+    "description": "Failure: no #private_api_token and no OAuth pair — Credentials validation must reject before any HTTP call.",
+    "config": {
+      "action": "run",
+      "parameters": {
+        "api_base_url": "https://api.docs.shoptet.com/_mock/shoptet-api/openapi",
+        "object": "categories",
+        "load_type": "full_load"
+      }
+    }
+  },
+  {
+    "name": "18_missing_object",
+    "description": "Failure: valid credentials but no `object` selected on the row — Configuration validation must reject before the registry is even consulted.",
+    "config": {
+      "action": "run",
+      "parameters": {
+        "auth_type": "private_token",
+        "#private_api_token": "DUMMY_TOKEN",
+        "api_base_url": "https://api.docs.shoptet.com/_mock/shoptet-api/openapi",
+        "load_type": "full_load"
+      }
+    }
+  },
+  {
+    "name": "19_unknown_include_section",
+    "description": "Failure: `include` names a section orders does not support — must be rejected before any fetch happens (zero HTTP interactions expected).",
+    "config": {
+      "action": "run",
+      "parameters": {
+        "auth_type": "private_token",
+        "#private_api_token": "DUMMY_TOKEN",
+        "api_base_url": "https://api.docs.shoptet.com/_mock/shoptet-api/openapi",
+        "object": "orders",
+        "load_type": "full_load",
+        "include": [
+          "totallyInvalidSection"
+        ]
+      }
+    }
+  },
+  {
+    "name": "20_addon_oauth_missing_token_url",
+    "description": "Failure: addon_oauth auth type with an OAuth access token but no oauth_token_url — Credentials validation must reject both being required together.",
+    "config": {
+      "action": "run",
+      "parameters": {
+        "auth_type": "addon_oauth",
+        "#oauth_access_token": "DUMMY_OAUTH_TOKEN",
+        "oauth_token_url": "",
+        "api_base_url": "https://api.docs.shoptet.com/_mock/shoptet-api/openapi",
+        "object": "orders",
+        "load_type": "full_load"
+      }
+    }
+  },
+  {
+    "name": "21_stock_supplies_per_stock",
+    "description": "FetchMode.PER_STOCK for stock_supplies — the direct replacement for the old permalink component's stock CSV export, so it gets its own coverage rather than being represented by stock_movements. Its primary key includes a `code` field, which is exactly why this must be recorded through tests/setup/record_code_safe.py: the VCR baseline sanitizer would otherwise redact the primary key and guarantee a replay mismatch.",
+    "config": {
+      "action": "run",
+      "parameters": {
+        "auth_type": "private_token",
+        "#private_api_token": "DUMMY_TOKEN",
+        "api_base_url": "https://api.docs.shoptet.com/_mock/shoptet-api/openapi",
+        "object": "stock_supplies",
+        "load_type": "full_load",
+        "stock_id": ""
+      }
+    }
+  }
+]

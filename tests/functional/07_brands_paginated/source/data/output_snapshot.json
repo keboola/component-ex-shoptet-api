@@ -1,0 +1,35 @@
+{
+  "files": {},
+  "hash_algorithm": "sha256",
+  "tables": {
+    "brands.csv": {
+      "columns": [
+        "1b02cb8e-d7b5-11e0-9a5c-feab5ed617ed",
+        "https://www.willywonka.com",
+        "willywonka@shoptet.cz",
+        "<p>Brand new chocolate <strong>everyday</strong></p>",
+        "europeanreseller@shoptet.cz",
+        "Shoptet a.s.",
+        "Chocolate Factory, 1234 Candy Lane, Sweet City, SC 56789",
+        "willy-wonka",
+        "Shoptet a.s.",
+        "Willy Wonka - Chocolate Factory",
+        "Willy Wonka",
+        "Willy Wonka",
+        "Chocolate Factory, 1234 Candy Lane, Sweet City, SC 56789",
+        "false",
+        "true"
+      ],
+      "hash": "sha256:23a11818b5fdccd415285dedb81e9affdc7e6c081571e8dd012de6db25f7c8bc",
+      "row_count": 3,
+      "size_bytes": 1173
+    },
+    "brands.csv.manifest": {
+      "columns": null,
+      "hash": "sha256:e7473fb0d355a4770c24fa71ff0a1891758fff4015ab30377a189dccba025290",
+      "row_count": null,
+      "size_bytes": 2515
+    }
+  },
+  "version": "1.0"
+}

@@ -1,0 +1,12 @@
+{
+  "exit_code": 1,
+  "stderr": "Configuration validation error: : Value error, Select the object to extract.\n",
+  "logs": [
+    {
+      "level": "ERROR",
+      "logger": "__main__",
+      "message": "Configuration validation error: : Value error, Select the object to extract.",
+      "timestamp": "2026-08-20T12:00:00.000Z"
+    }
+  ]
+}

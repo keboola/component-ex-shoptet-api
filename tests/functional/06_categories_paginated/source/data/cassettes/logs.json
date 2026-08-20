@@ -1,0 +1,24 @@
+{
+  "exit_code": null,
+  "stderr": "",
+  "logs": [
+    {
+      "level": "INFO",
+      "logger": "root",
+      "message": "Loading state file..",
+      "timestamp": "2026-08-20T12:00:00.000Z"
+    },
+    {
+      "level": "INFO",
+      "logger": "__main__",
+      "message": "Wrote 3 rows to categories.",
+      "timestamp": "2026-08-20T12:00:00.000Z"
+    },
+    {
+      "level": "INFO",
+      "logger": "__main__",
+      "message": "Extraction of 'categories' finished.",
+      "timestamp": "2026-08-20T12:00:00.000Z"
+    }
+  ]
+}

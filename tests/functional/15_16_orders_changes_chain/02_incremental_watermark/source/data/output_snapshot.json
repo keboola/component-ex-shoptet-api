@@ -1,0 +1,23 @@
+{
+  "files": {},
+  "hash_algorithm": "sha256",
+  "tables": {
+    "orders_changes.csv": {
+      "columns": [
+        "201800001",
+        "2018-05-29T09:02:27+0200",
+        "edit"
+      ],
+      "hash": "sha256:1a38ce32aca3ec8a70dc0db2b6227e43ed15d1362c5d5e582688a88899a806db",
+      "row_count": 3,
+      "size_bytes": 123
+    },
+    "orders_changes.csv.manifest": {
+      "columns": null,
+      "hash": "sha256:ef4b78ae7b31fe3c5c98a6e2068c2de52716f64308d5247eba7d51f9361ac80e",
+      "row_count": null,
+      "size_bytes": 684
+    }
+  },
+  "version": "1.0"
+}

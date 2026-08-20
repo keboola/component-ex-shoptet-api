@@ -1,0 +1,12 @@
+{
+  "exit_code": 1,
+  "stderr": "Configuration validation error: : Value error, The addon OAuth flow needs both the permanent OAuth access token and the e-shop's OAuth server URL (\u2026/action/ApiOAuthServer/getAccessToken).\n",
+  "logs": [
+    {
+      "level": "ERROR",
+      "logger": "__main__",
+      "message": "Configuration validation error: : Value error, The addon OAuth flow needs both the permanent OAuth access token and the e-shop's OAuth server URL (\u2026/action/ApiOAuthServer/getAccessToken).",
+      "timestamp": "2026-08-20T12:00:00.000Z"
+    }
+  ]
+}

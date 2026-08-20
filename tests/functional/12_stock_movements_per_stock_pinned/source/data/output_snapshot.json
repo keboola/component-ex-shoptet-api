@@ -1,0 +1,31 @@
+{
+  "files": {},
+  "hash_algorithm": "sha256",
+  "tables": {
+    "stock_movements.csv": {
+      "columns": [
+        "1",
+        "126222",
+        "21.505",
+        "0.505",
+        "2018-05-29T09:02:27+0200",
+        "novak@shoptet.cz",
+        "1b02cb8e-d7b5-11e0-9a5c-feab5ed617ed",
+        "2017000049",
+        "26/BIL",
+        "1b02cb8e-d7b5-11e0-9a5c-feab5ed617ed",
+        "30.505"
+      ],
+      "hash": "sha256:169bd79e184ab59f954dc3a22c97d15f36d9a3f8dd7a7ced1bb05c46cfe14c50",
+      "row_count": 3,
+      "size_bytes": 492
+    },
+    "stock_movements.csv.manifest": {
+      "columns": null,
+      "hash": "sha256:e0b2b62b84eeeced61d2dec3ee65788584fe3e56084f5336c3aed74be6895db5",
+      "row_count": null,
+      "size_bytes": 1861
+    }
+  },
+  "version": "1.0"
+}

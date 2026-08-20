@@ -1,0 +1,26 @@
+{
+  "files": {},
+  "hash_algorithm": "sha256",
+  "tables": {
+    "variant_parameters.csv": {
+      "columns": [
+        "1",
+        "Barva",
+        "color",
+        "Color",
+        "1",
+        "[{\"id\": 1, \"paramValue\": \"Color Red\", \"rawValue\": \"color-red\", \"color\": \"#34ff34\", \"image\": \"https://www.domena-eshopu.cz/user/parameters/100.jpg\", \"valuePriority\": 1}]"
+      ],
+      "hash": "sha256:6dd9c68c404f63aeafa584d13e57f8ad0a7dbca9f8742589ccedd16cac3cd270",
+      "row_count": 3,
+      "size_bytes": 642
+    },
+    "variant_parameters.csv.manifest": {
+      "columns": null,
+      "hash": "sha256:bdf0df2bc956796f35dbe16c2e629c56d860ce87fb4362bd0c4ec224b9a222f7",
+      "row_count": null,
+      "size_bytes": 1069
+    }
+  },
+  "version": "1.0"
+}
