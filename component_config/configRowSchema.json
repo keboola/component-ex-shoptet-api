@@ -1,1 +1,244 @@
-{}
+{
+  "type": "object",
+  "title": "Data to extract",
+  "required": [
+    "object",
+    "load_type"
+  ],
+  "properties": {
+    "object": {
+      "type": "string",
+      "title": "Object",
+      "enum": [
+        "orders",
+        "order_history",
+        "products",
+        "product_pricelist_prices",
+        "customers",
+        "invoices",
+        "proforma_invoices",
+        "credit_notes",
+        "delivery_notes",
+        "proof_payments",
+        "abandoned_carts",
+        "discount_coupons",
+        "quantity_discounts",
+        "articles",
+        "orders_changes",
+        "products_changes",
+        "customers_changes",
+        "invoices_changes",
+        "proforma_invoices_changes",
+        "credit_notes_changes",
+        "proof_payments_changes",
+        "stocks",
+        "stock_supplies",
+        "stock_movements",
+        "categories",
+        "parametric_categories",
+        "brands",
+        "suppliers",
+        "price_lists",
+        "product_availabilities",
+        "product_flags",
+        "product_units",
+        "product_measure_units",
+        "product_warranties",
+        "filtering_parameters",
+        "variant_parameters",
+        "surcharge_parameters",
+        "recycling_fee_categories",
+        "consumption_taxes",
+        "order_statuses",
+        "order_sources",
+        "shipping_methods",
+        "payment_methods",
+        "customer_groups",
+        "customer_regions",
+        "reviews_products",
+        "reviews_project",
+        "volume_discounts",
+        "xy_discounts",
+        "mailing_lists",
+        "unsubscribed_emails",
+        "sales_channels",
+        "article_sections",
+        "pages",
+        "discussion_posts",
+        "eshop"
+      ],
+      "options": {
+        "enum_titles": [
+          "Orders",
+          "Orders — history / remarks",
+          "Products",
+          "Products — prices in all price lists",
+          "Customers",
+          "Invoices",
+          "Proforma invoices",
+          "Credit notes",
+          "Delivery notes",
+          "Proofs of payment",
+          "Abandoned carts",
+          "Discount coupons",
+          "Quantity discounts",
+          "Blog articles",
+          "Orders — change feed (edits & deletes)",
+          "Products — change feed (edits & deletes)",
+          "Customers — change feed (edits & deletes)",
+          "Invoices — change feed (edits & deletes)",
+          "Proforma invoices — change feed (edits & deletes)",
+          "Credit notes — change feed (edits & deletes)",
+          "Proofs of payment — change feed (edits & deletes)",
+          "Stock — list of stocks",
+          "Stock — product supplies",
+          "Stock — movements",
+          "Categories",
+          "Parametric categories",
+          "Brands",
+          "Suppliers",
+          "Price lists",
+          "Product availabilities",
+          "Product flags",
+          "Product units",
+          "Product measure units",
+          "Product warranties",
+          "Filtering parameters",
+          "Variant parameters",
+          "Surcharge parameters",
+          "Recycling fee categories",
+          "Consumption taxes",
+          "Order statuses",
+          "Order sources",
+          "Shipping methods",
+          "Payment methods",
+          "Customer groups",
+          "Customer regions",
+          "Reviews — products",
+          "Reviews — e-shop",
+          "Volume discounts",
+          "XY discounts",
+          "E-mail distribution lists",
+          "Unsubscribed e-mails",
+          "Sales channels",
+          "Blog sections",
+          "Content pages",
+          "Discussion posts",
+          "E-shop settings"
+        ]
+      },
+      "description": "What to extract. Each object becomes one table; nested data such as order items or product variants is written to companion tables.",
+      "propertyOrder": 10
+    },
+    "load_type": {
+      "type": "string",
+      "title": "Load type",
+      "enum": [
+        "incremental_load",
+        "full_load"
+      ],
+      "options": {
+        "enum_titles": [
+          "Incremental update (upsert by primary key)",
+          "Full load (overwrite the table every run)"
+        ]
+      },
+      "default": "incremental_load",
+      "description": "Incremental update only asks Shoptet for records changed since the previous run, where the endpoint supports it, and upserts them by primary key. Use a full load when you need deleted records to disappear from the table.",
+      "propertyOrder": 20
+    },
+    "lookback_hours": {
+      "type": "integer",
+      "title": "Lookback (hours)",
+      "default": 24,
+      "minimum": 0,
+      "maximum": 2160,
+      "description": "How far before the previous run to start the change window, so records edited around the previous run's cut-off are not missed.",
+      "options": {
+        "dependencies": {
+          "load_type": "incremental_load"
+        }
+      },
+      "propertyOrder": 30
+    },
+    "date_range": {
+      "type": "object",
+      "title": "Date range",
+      "description": "Optional window. Applied where the endpoint supports a date filter (creation time for documents, last visit for abandoned carts); ignored for reference data that has none.",
+      "propertyOrder": 40,
+      "properties": {
+        "date_from": {
+          "type": "string",
+          "title": "Date from",
+          "description": "YYYY-MM-DD, a full ISO timestamp, or a relative expression such as '30 days ago'. Leave empty for no lower bound.",
+          "options": {
+            "inputAttributes": {
+              "placeholder": "30 days ago"
+            }
+          },
+          "propertyOrder": 10
+        },
+        "date_to": {
+          "type": "string",
+          "title": "Date to",
+          "description": "Leave empty for no upper bound.",
+          "options": {
+            "inputAttributes": {
+              "placeholder": "now"
+            }
+          },
+          "propertyOrder": 20
+        }
+      }
+    },
+    "include": {
+      "type": "array",
+      "title": "Optional sections",
+      "format": "select",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": []
+      },
+      "description": "Extra parts of the response that Shoptet only sends when asked for (order notes, product images, …). Available sections depend on the selected object.",
+      "options": {
+        "async": {
+          "label": "Load available sections",
+          "action": "listIncludeSections",
+          "autoload": [
+            "parameters.object"
+          ]
+        }
+      },
+      "propertyOrder": 50
+    },
+    "stock_id": {
+      "type": "string",
+      "title": "Stock",
+      "enum": [],
+      "format": "select",
+      "description": "Leave empty to read every stock in the e-shop.",
+      "options": {
+        "dependencies": {
+          "object": [
+            "stock_supplies",
+            "stock_movements"
+          ]
+        },
+        "async": {
+          "label": "Load stocks",
+          "action": "listStocks"
+        }
+      },
+      "propertyOrder": 60
+    },
+    "extract_child_tables": {
+      "type": "boolean",
+      "title": "Split nested data into separate tables",
+      "format": "checkbox",
+      "default": true,
+      "description": "On: order items, product variants and similar arrays get their own tables, keyed back to the parent record. Off: they stay as JSON strings in a single column.",
+      "propertyOrder": 70
+    }
+  }
+}

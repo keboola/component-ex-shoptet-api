@@ -1,1 +1,1 @@
-/blob/master/README.md
+https://help.keboola.com/components/extractors/marketing-sales/shoptet/

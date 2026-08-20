@@ -1,19 +1,75 @@
 {
   "type": "object",
-  "title": "extractor configuration",
+  "title": "Shoptet connection",
   "required": [
-    "print_hello"
+    "auth_type"
   ],
   "properties": {
-    "print_hello": {
-      "type": "boolean",
-      "title": "Print Hello",
-      "propertyOrder": 1
+    "auth_type": {
+      "type": "string",
+      "title": "Authentication method",
+      "enum": [
+        "private_token",
+        "addon_oauth"
+      ],
+      "options": {
+        "enum_titles": [
+          "Private API token (Shoptet Premium)",
+          "Addon OAuth token (Shoptet API partner)"
+        ]
+      },
+      "default": "private_token",
+      "description": "The private API token is the simpler option but is only available on Shoptet Premium. The addon OAuth flow works on any tariff that can install marketplace addons, but the integration must be a registered Shoptet API partner.",
+      "propertyOrder": 10
     },
-    "debug": {
-      "type": "boolean",
-      "title": "Debug",
-      "propertyOrder": 2
+    "#private_api_token": {
+      "type": "string",
+      "format": "password",
+      "title": "Private API token",
+      "description": "Generate it in the e-shop administration under Connections → Private API, and grant it read rights for the endpoint groups you want to extract.",
+      "options": {
+        "dependencies": {
+          "auth_type": "private_token"
+        }
+      },
+      "propertyOrder": 20
+    },
+    "#oauth_access_token": {
+      "type": "string",
+      "format": "password",
+      "title": "OAuth access token",
+      "description": "The permanent OAuth access token the addon received when it was installed in this e-shop.",
+      "options": {
+        "dependencies": {
+          "auth_type": "addon_oauth"
+        }
+      },
+      "propertyOrder": 30
+    },
+    "oauth_token_url": {
+      "type": "string",
+      "title": "OAuth server URL",
+      "description": "For example https://123456.myshoptet.com/action/ApiOAuthServer/getAccessToken — shown in the e-shop administration under Connections → API partner → Access to API.",
+      "options": {
+        "dependencies": {
+          "auth_type": "addon_oauth"
+        },
+        "inputAttributes": {
+          "placeholder": "https://123456.myshoptet.com/action/ApiOAuthServer/getAccessToken"
+        }
+      },
+      "propertyOrder": 40
+    },
+    "test_connection": {
+      "type": "button",
+      "format": "sync-action",
+      "propertyOrder": 50,
+      "options": {
+        "async": {
+          "label": "Test connection",
+          "action": "testConnection"
+        }
+      }
     }
   }
 }
