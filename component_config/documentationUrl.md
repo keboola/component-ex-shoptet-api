@@ -1,1 +1,1 @@
-https://help.keboola.com/components/extractors/marketing-sales/shoptet/
+https://github.com/keboola/component-ex-shoptet-api/blob/main/README.md

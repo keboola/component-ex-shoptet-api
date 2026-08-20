@@ -151,7 +151,6 @@ dependencies = [
 dev = [
     { name = "freezegun" },
     { name = "keboola-datadirtest" },
-    { name = "mock" },
     { name = "pre-commit" },
     { name = "pytest" },
     { name = "ruff" },
@@ -172,7 +171,6 @@ requires-dist = [
 dev = [
     { name = "freezegun", specifier = ">=1.5.1" },
     { name = "keboola-datadirtest", specifier = ">=2.2.0" },
-    { name = "mock", specifier = ">=5.2.0" },
     { name = "pre-commit", specifier = ">=4.5.0" },
     { name = "pytest", specifier = ">=9.0.2" },
     { name = "ruff", specifier = ">=0.16.0" },
@@ -277,15 +275,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/32/71/abef1086ea6953fa01ab722eeb5c899f31604f2c739ed3a6b8b2f071d76d/keboola_vcr-0.7.1.tar.gz", hash = "sha256:1f4f4557dae473ec43375da46bd69677d78b5fcabd48d443158b5c47771c70d7", size = 45769 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/6e/89/2d320232cefc3cc5d7142857f0eb3ac9e3e020fcd9eec0efb43b4205e9b4/keboola_vcr-0.7.1-py3-none-any.whl", hash = "sha256:71c6dd1589199b2873a971d9c5409d2ba452ff174b31bffe5e18c8a8091ab1af", size = 49691 },
-]
-
-[[package]]
-name = "mock"
-version = "5.2.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/07/8c/14c2ae915e5f9dca5a22edd68b35be94400719ccfa068a03e0fb63d0f6f6/mock-5.2.0.tar.gz", hash = "sha256:4e460e818629b4b173f32d08bf30d3af8123afbb8e04bb5707a1fd4799e503f0", size = 92796 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/bd/d9/617e6af809bf3a1d468e0d58c3997b1dc219a9a9202e650d30c2fc85d481/mock-5.2.0-py3-none-any.whl", hash = "sha256:7ba87f72ca0e915175596069dbbcc7c75af7b5e9b9bc107ad6349ede0819982f", size = 31617 },
 ]
 
 [[package]]

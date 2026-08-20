@@ -13,7 +13,11 @@ COPY scripts/ scripts/
 FROM base AS test
 RUN uv sync --all-groups --frozen
 COPY tests/ tests/
-RUN uv run ruff check src/ tests/
+# Formatting is checked in CI as well as pre-commit: pre-commit is bypassable with
+# --no-verify, and `ruff format` is deterministic, so enforcing it here costs nothing.
+# `ty check` is deliberately NOT run here — ty is pre-1.0 and unpinned, so an upstream
+# release could redden CI on untouched code. It stays a local pre-commit gate.
+RUN uv run ruff check src/ tests/ && uv run ruff format --check src/ tests/
 CMD ["uv", "run", "pytest", "tests/", "-v"]
 
 FROM base AS production
