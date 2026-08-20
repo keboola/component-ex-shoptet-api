@@ -1,0 +1,19 @@
+__pycache__/
+.DS_Store
+.idea
+.ruff_cache
+.venv
+.vscode
+*.py[cod]
+*.egg-info
+venv
+.claude
+.DS_Store
+
+# kbc datafolder
+/data
+
+# vcr datadirtesting
+secrets.json
+tests/functional/*/source/data/out/
+tests/functional/*/source/data/in/

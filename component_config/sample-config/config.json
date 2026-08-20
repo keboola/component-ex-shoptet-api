@@ -1,0 +1,21 @@
+{
+  "storage": {
+    "input": {
+      "files": [],
+      "tables": [
+        {
+          "source": "in.c-example.example",
+          "destination": "example.csv"
+        }
+      ]
+    },
+    "output": {
+      "files": [],
+      "tables": []
+    }
+  },
+  "parameters": {
+    "#api_token": "your-secret-token",
+    "debug": false
+  }
+}

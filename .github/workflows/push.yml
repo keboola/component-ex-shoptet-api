@@ -1,0 +1,19 @@
+name: Keboola Component Build & Deploy Pipeline
+on:
+  push:
+    branches-ignore:
+      - main
+    tags:
+      - "*"
+
+concurrency: ci-${{ github.ref }}
+
+jobs:
+  ci:
+    uses: keboola/component-ci/.github/workflows/component-pipeline.yml@master
+    with:
+      app_id: kds-team.ex-shoptet-api
+      vendor: kds-team
+      test_build_target: test
+      docker_build_target: production
+    secrets: inherit
