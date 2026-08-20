@@ -4,9 +4,12 @@ Covers everything network-facing so ``component.py`` stays a thin orchestrator:
 
 * **Authentication** — both Shoptet auth models:
   ``private_token`` sends a Shoptet Premium private API token straight through
-  (``Shoptet-Private-API-Token``); ``addon_oauth`` exchanges an addon's permanent
-  OAuth token for the 30-minute API access token (``Shoptet-Access-Token``) and
-  refreshes it transparently on expiry or a 401.
+  (``Shoptet-Private-Api-Token``, matching the casing the OpenAPI
+  ``securitySchemes`` declare — HTTP header names are case-insensitive per RFC
+  7230, so this is cosmetic, but matching the spec avoids the reader wondering);
+  ``addon_oauth`` exchanges an addon's permanent OAuth token for the 30-minute
+  API access token (``Shoptet-Access-Token``) and refreshes it transparently on
+  expiry or a 401.
 * **Rate limiting** — Shoptet uses a leaky bucket (200 drops, draining 10/s) and
   publishes the fill level on every response, so we throttle *before* being told
   to, and honour ``Retry-After`` on the 429 we couldn't avoid.
@@ -171,7 +174,7 @@ class ShoptetClient:
 
     def _auth_headers(self, *, force_refresh: bool = False) -> dict[str, str]:
         if self._private_api_token:
-            return {"Shoptet-Private-API-Token": self._private_api_token}
+            return {"Shoptet-Private-Api-Token": self._private_api_token}
         return {"Shoptet-Access-Token": self._access_token(force_refresh=force_refresh)}
 
     def _access_token(self, *, force_refresh: bool = False) -> str:

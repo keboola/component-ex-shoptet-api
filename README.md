@@ -152,6 +152,19 @@ Because child rows are keyed by position, removing a line item from an existing 
 not delete its old row on an incremental load. Use a `full_load` for tables where that
 matters.
 
+Nested arrays are split into companion tables one level deep only. Two `products` `include`
+options — `perStockAmounts` and `perPricelistPrices` — are documented as "amounts/prices per
+individual stock/price list", but the fields they add actually live one level *deeper*, inside
+each element of the `products_variants` table, not on the product record itself. Requesting
+them does not create `products_stock_amounts` / `products_pricelist_prices` tables; it only
+widens the JSON blob already stored in `products_variants`' nested-object columns.
+
+`abandoned_carts` has no identifier field of any kind in the Shoptet API — not `guid`, not `id`,
+nothing. It is always extracted as a full load, regardless of the row's `load_type` setting: an
+incremental run would only be able to fetch the newest slice, and with no primary key to upsert
+on, that slice would silently overwrite the whole table and discard every previously
+accumulated cart. The job log explains this when it happens.
+
 Testing without a Shoptet account
 =================================
 
@@ -160,9 +173,10 @@ There is no self-service sandbox. Ranked by effort:
 1. **Documentation mock server — free, no account, works today.** Shoptet's API reference is
    served with a mock at `https://api.docs.shoptet.com/_mock/shoptet-api/openapi`, which
    returns the documented example payloads for any dummy token. Set `api_base_url` to it and
-   the component runs end to end against realistic responses. It is what the test suite is
-   built on. Limitation: snapshot jobs return a `resultUrl` that does not exist, so only the
-   paginated / list / single objects can be exercised this way.
+   the component runs end to end against realistic responses for the paginated / list / single
+   objects. Limitation: snapshot jobs return a `resultUrl` on a host that does not resolve, so
+   no `SNAPSHOT`-mode object (orders, products, customers, all accounting documents, abandoned
+   carts) can be exercised against it — only real Shoptet credentials can.
 2. **Free trial e-shop — minutes, but no API.** A trial e-shop cannot install addons and has
    no Private API screen, so it cannot issue a token.
 3. **Shoptet Premium e-shop — the private-token path.** Any Premium e-shop can generate a
@@ -173,6 +187,23 @@ There is no self-service sandbox. Ranked by effort:
    and receive a free test e-shop, an API Partner admin section, and 7-day test API tokens.
    This is the only route to a Shoptet-provided test environment, and the only route to a
    published marketplace addon.
+
+### Current test coverage
+
+Today's test suite is `tests/test_client.py` (HTTP concerns — auth, throttling, retries,
+pagination, snapshot polling — against a stub `requests.Session`), `tests/test_component.py`
+(config-in, CSV-and-manifest-out, against the same stub session), `tests/test_configuration.py`
+and `tests/test_registry_invariants.py` (every declared primary-key column and child field
+checked against a vendored extract of the real Shoptet response schemas). All of it runs
+offline, with no Shoptet account or mock-server access needed.
+
+`tests/test_functional.py` wires up a VCR-based (`keboola.datadirtest.vcr.VCRDataDirTester`)
+end-to-end harness, but no cassettes are recorded yet — `tests/functional/` does not exist.
+Recording them is a later phase's job: record against the documentation mock server for the
+paginated / list / single objects, and note that the `SNAPSHOT`-mode objects (see the mock-server
+limitation above) will stay covered only by the unit tests' stubbed responses until a real
+Shoptet token is available to record against — the mock server's `resultUrl` host does not
+resolve, so there is no way to record a snapshot cassette against it.
 
 Development
 -----------

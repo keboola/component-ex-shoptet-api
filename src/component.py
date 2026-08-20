@@ -49,7 +49,7 @@ from configuration import AuthType, Configuration, Credentials, ObjectType
 _SENSITIVE_FIELDS = [
     "access_token",
     "Shoptet-Access-Token",
-    "Shoptet-Private-API-Token",
+    "Shoptet-Private-Api-Token",
 ]
 VCR_SANITIZERS = [DefaultSanitizer(sensitive_fields=_SENSITIVE_FIELDS)]
 
@@ -122,6 +122,15 @@ class _Endpoint:
     # not one global guess. None leaves the API default in place.
     items_per_page: int | None = None
     extra_params: dict[str, Any] = field(default_factory=dict)
+    # True when the object has no identifier field in the API response at all
+    # (an empty ``primary_key``, not merely one the response sometimes omits).
+    # An incremental run there cannot upsert — there is nothing to upsert on —
+    # so if the fetch is also date-windowed (``created_from``/``changed_from``),
+    # each run would silently overwrite the whole table with only the newest
+    # slice, destroying every previously accumulated row. Setting this forces a
+    # full load regardless of the row's own ``load_type`` and logs why, rather
+    # than silently discarding history. See ``Component._effective_incremental``.
+    full_load_only: bool = False
 
 
 _ORDER_CHILDREN = (
@@ -129,6 +138,13 @@ _ORDER_CHILDREN = (
     _Child("shippings", "shippings"),
     _Child("paymentMethods", "payment_methods"),
     _Child("completion", "completion"),
+    # `paymentTransactions` is a real, typed array field on `orderSnapshot`, but
+    # it is not in the six documented `include` sections for this snapshot
+    # endpoint (it *is* one of the sections for the single-order detail endpoint,
+    # a different operation) — so it's most likely never populated here. Left in
+    # place rather than removed: `_finalize_table` already skips a 0-row table
+    # harmlessly, and only a live snapshot payload can confirm it never appears
+    # unconditionally. Remove it once that's checked, if it's confirmed dead.
     _Child("paymentTransactions", "payment_transactions"),
 )
 
@@ -146,21 +162,41 @@ _PRODUCT_CHILDREN = (
     _Child("alternativeProducts", "alternative_products"),
     _Child("relatedFiles", "related_files"),
     _Child("relatedVideos", "related_videos"),
-    _Child("perStockAmounts", "stock_amounts"),
-    _Child("perPricelistPrices", "pricelist_prices"),
+    # NOT `perStockAmounts` / `perPricelistPrices`: both `include` options are
+    # real, but the fields they add live one level deeper than any `_Child` here
+    # can reach — inside each element of `variants`, not on the product record
+    # itself (verified against `productSnapshot.variants.items.properties`).
+    # Splitting them into their own `products_variants_stock_amounts` /
+    # `..._pricelist_prices` tables needs a child-of-a-child mechanism the
+    # current architecture doesn't have; until that's built, requesting these
+    # two sections only makes the JSON blob inside `products_variants` wider —
+    # see the README note under "Products — prices in all price lists".
 )
 
 _DOCUMENT_CHILDREN = (_Child("items", "items"),)
 
 
 # Change feeds share one shape: paginated, `from` is mandatory, and each row is
-# an (entity, changeType, changeTime) triple rather than the entity itself.
-def _changes_endpoint(path: str, items_per_page: int) -> _Endpoint:
-    """A change feed: paginated, `from` is mandatory, one row per change event."""
+# an (entity, changeType, changeTime) triple rather than the entity itself. The
+# entity's identifier field differs per feed: orders/invoices/proforma invoices/
+# credit notes/proof payments key their change entries by `code`, but products
+# and customers key theirs by `guid` — the response has no `code` at all in
+# those two cases.
+def _changes_endpoint(path: str, items_per_page: int, id_field: str = "code") -> _Endpoint:
+    """A change feed: paginated, `from` is mandatory, one row per change event.
+
+    The primary key is (identifier, changeTime, changeType), not the identifier
+    alone: a change feed is an event log rather than a table of latest-known
+    entities — `lookback_hours` deliberately re-fetches events near the previous
+    watermark so a run's own overlap must upsert onto the same row rather than
+    fork into a duplicate, and `changeTime` alone is schema-nullable and not
+    guaranteed unique across entities. All three fields together are what make
+    one change event distinct.
+    """
     return _Endpoint(
         path,
         FetchMode.PAGINATED,
-        ["code", "changeTime"],
+        [id_field, "changeTime", "changeType"],
         data_key="changes",
         changed_from="from",
         items_per_page=items_per_page,
@@ -185,7 +221,15 @@ _REGISTRY: dict[ObjectType, _Endpoint] = {
     ObjectType.order_history: _Endpoint(
         "/api/orders/history/snapshot",
         FetchMode.SNAPSHOT,
-        ["orderCode", "creationTime"],
+        # `orderCode` + `id`, not `id` alone. The spec calls `id` an "order history
+        # identifier" with example value 1, and `orderHistorySnapshot` adds `orderCode`
+        # specifically to "identify the relation to the order" — both read like a
+        # per-order sequence rather than a global id, and the spec never claims global
+        # uniqueness. If `id` does turn out to be global the composite key is still
+        # correct; if it is per-order, `id` alone would merge every order's first
+        # remark into a single row. `creationTime` is deliberately not in the key: it
+        # is schema-nullable, so two null-timestamp remarks would collide.
+        ["orderCode", "id"],
         created_from="creationTimeFrom",
         created_to="creationTimeTo",
     ),
@@ -224,9 +268,15 @@ _REGISTRY: dict[ObjectType, _Endpoint] = {
     ObjectType.product_pricelist_prices: _Endpoint(
         "/api/products/snapshot/pricelists",
         FetchMode.SNAPSHOT,
-        ["guid"],
-        children=(_Child("prices", "prices"),),
-        parent_prefix="product",
+        # No `guid` field on this record at all (`productGuid` is the product
+        # identifier). Despite the operation description ("each product taking
+        # one line ... its prices across all pricelists"), each JSONL record is
+        # already one (product × price list) row — `code` here is the price
+        # list's own code, merged in from `pricelistDetail`, not a nested array —
+        # so there is no parent/child relationship and nothing to split; the
+        # top-level `prices` field is an unrelated preview-price object, not a
+        # per-price-list breakdown.
+        ["productGuid", "code"],
     ),
     ObjectType.customers: _Endpoint(
         "/api/customers/snapshot",
@@ -237,7 +287,13 @@ _REGISTRY: dict[ObjectType, _Endpoint] = {
         changed_from="changeTimeFrom",
         children=(
             _Child("accounts", "accounts"),
-            _Child("deliveryAddresses", "delivery_addresses"),
+            # The API field is genuinely singular — `deliveryAddress`, not
+            # `deliveryAddresses` — even though it is an array of potentially
+            # several addresses (verified against `customerSnapshot`). Do not
+            # "fix" this back to the plural spelling; the output *table* suffix
+            # stays plural because it holds many rows, but the API's field name
+            # does not agree with its own cardinality.
+            _Child("deliveryAddress", "delivery_addresses"),
             _Child("remarks", "remarks"),
         ),
         parent_prefix="customer",
@@ -292,24 +348,44 @@ _REGISTRY: dict[ObjectType, _Endpoint] = {
         created_from="creationTimeFrom",
         created_to="creationTimeTo",
         changed_from="changeTimeFrom",
-        children=_DOCUMENT_CHILDREN,
-        parent_prefix="proof_payment",
+        # No `children=_DOCUMENT_CHILDREN` here: unlike invoices/proforma
+        # invoices/credit notes/delivery notes, `proofPaymentSnapshot` (49
+        # fields — billing/bank details, `payment`, `vatBreakdown`, …) has no
+        # `items` field at all. A proof of payment is a receipt, not a
+        # line-itemized document; reusing the document family's children was an
+        # unchecked generalization.
     ),
     ObjectType.abandoned_carts: _Endpoint(
         "/api/abandoned-carts/snapshot",
         FetchMode.SNAPSHOT,
-        ["guid"],
-        # Abandoned carts are filtered by last visit, not by creation.
+        # `abandonedCartSnapshot`'s full field list — date, age, items,
+        # cartValue, coupon, customer, returns, lastStep — has no identifier of
+        # any kind, not even nested inside `customer` (name/email/phone only).
+        # An abandoned cart isn't a persistently-identified entity in this API
+        # at all, so there is no primary key to declare.
+        [],
+        # Abandoned carts are filtered by last visit, not by creation; this is
+        # still an explicit, user-chosen "Date range" filter, not an automatic
+        # incremental watermark, so it's kept.
         created_from="visitTimeFrom",
         created_to="visitTimeTo",
-        changed_from="visitTimeFrom",
+        # Deliberately no `changed_from`: with no primary key, an incremental
+        # run cannot upsert, so the write side always overwrites the whole
+        # table (see `_finalize_table`). Combining that with a `changed_from`
+        # watermark window would fetch only the newest slice and overwrite the
+        # table with just that slice on every incremental run, destroying every
+        # previously accumulated cart. `full_load_only` below forces a full,
+        # unwindowed load instead, regardless of the row's `load_type`.
         children=(_Child("items", "items"),),
         parent_prefix="cart",
+        full_load_only=True,
     ),
     # ------------------------------------------------------------ change feeds
     ObjectType.orders_changes: _changes_endpoint("/api/orders/changes", 1000),
-    ObjectType.products_changes: _changes_endpoint("/api/products/changes", 1000),
-    ObjectType.customers_changes: _changes_endpoint("/api/customers/changes", 20),
+    # products/customers change entries are keyed by `guid`; there is no `code`
+    # field on either response at all (unlike the other five change feeds).
+    ObjectType.products_changes: _changes_endpoint("/api/products/changes", 1000, id_field="guid"),
+    ObjectType.customers_changes: _changes_endpoint("/api/customers/changes", 20, id_field="guid"),
     ObjectType.invoices_changes: _changes_endpoint("/api/invoices/changes", 20),
     ObjectType.proforma_invoices_changes: _changes_endpoint("/api/proforma-invoices/changes", 20),
     ObjectType.credit_notes_changes: _changes_endpoint("/api/credit-notes/changes", 20),
@@ -329,6 +405,7 @@ _REGISTRY: dict[ObjectType, _Endpoint] = {
         FetchMode.PER_STOCK,
         ["stock_id", "id"],
         data_key="movements",
+        changed_from="changeTimeFrom",
         items_per_page=1000,
     ),
     # -------------------------------------------------- catalogue & reference
@@ -338,7 +415,10 @@ _REGISTRY: dict[ObjectType, _Endpoint] = {
     ObjectType.parametric_categories: _Endpoint(
         "/api/parametric-categories", FetchMode.PAGINATED, ["guid"], data_key="parametricCategories", items_per_page=100
     ),
-    ObjectType.brands: _Endpoint("/api/brands", FetchMode.PAGINATED, ["code"], data_key="brands", items_per_page=1000),
+    # No `code` field on this response at all — only `guid` (the path parameter
+    # of the single-brand detail endpoint is confusingly also named `code`, but
+    # its own description says "brand GUID").
+    ObjectType.brands: _Endpoint("/api/brands", FetchMode.PAGINATED, ["guid"], data_key="brands", items_per_page=1000),
     ObjectType.suppliers: _Endpoint(
         "/api/suppliers", FetchMode.PAGINATED, ["guid"], data_key="suppliers", items_per_page=500
     ),
@@ -392,7 +472,9 @@ _REGISTRY: dict[ObjectType, _Endpoint] = {
         "/api/shipping-methods", FetchMode.LIST, ["guid"], data_key="shippingMethods"
     ),
     ObjectType.payment_methods: _Endpoint("/api/payment-methods", FetchMode.LIST, ["guid"], data_key="paymentMethods"),
-    ObjectType.customer_groups: _Endpoint("/api/customers/groups", FetchMode.LIST, ["guid"], data_key="customerGroups"),
+    # No `guid` field on this response at all — `id` is the only required,
+    # non-nullable, unique-looking field.
+    ObjectType.customer_groups: _Endpoint("/api/customers/groups", FetchMode.LIST, ["id"], data_key="customerGroups"),
     ObjectType.customer_regions: _Endpoint("/api/customers/regions", FetchMode.LIST, ["id"], data_key="regions"),
     # ---------------------------------------------------- marketing & content
     ObjectType.reviews_products: _Endpoint(
@@ -402,7 +484,13 @@ _REGISTRY: dict[ObjectType, _Endpoint] = {
         "/api/reviews/project", FetchMode.PAGINATED, ["id"], data_key="reviews", items_per_page=200
     ),
     ObjectType.discount_coupons: _Endpoint(
-        "/api/discount-coupons", FetchMode.PAGINATED, ["code"], data_key="coupons", items_per_page=1000
+        "/api/discount-coupons",
+        FetchMode.PAGINATED,
+        ["code"],
+        data_key="coupons",
+        created_from="creationTimeFrom",
+        created_to="creationTimeTo",
+        items_per_page=1000,
     ),
     ObjectType.quantity_discounts: _Endpoint(
         "/api/quantity-discounts", FetchMode.PAGINATED, ["id"], data_key="discounts", items_per_page=20
@@ -525,6 +613,7 @@ class Component(ComponentBase):
         assert cfg.object is not None  # guaranteed by Configuration validation
         endpoint = _REGISTRY[cfg.object]
         self._validate_include(cfg, endpoint)
+        effective_incremental = self._effective_incremental(cfg, endpoint)
 
         # Take the watermark before fetching, so a record edited mid-run is
         # re-fetched next time instead of being skipped.
@@ -534,13 +623,13 @@ class Component(ComponentBase):
         writers: dict[str, _TableWriter] = {}
         try:
             parent_writer = self._writer(writers, cfg.object.value)
-            for record in self._iter_records(cfg, endpoint, previous_state):
+            for record in self._iter_records(cfg, endpoint, previous_state, effective_incremental):
                 self._write_record(record, cfg, endpoint, parent_writer, writers)
             for writer in writers.values():
                 primary_key = (
                     endpoint.primary_key if writer.name == cfg.object.value else self._child_primary_key(endpoint)
                 )
-                self._finalize_table(writer, primary_key, cfg.incremental)
+                self._finalize_table(writer, primary_key, effective_incremental)
         finally:
             for writer in writers.values():
                 writer.close()
@@ -548,12 +637,35 @@ class Component(ComponentBase):
         self.write_state_file({_STATE_LAST_RUN: run_started_at.strftime(_API_DATETIME_FORMAT)})
         logger.info("Extraction of '%s' finished.", cfg.object.value)
 
+    @staticmethod
+    def _effective_incremental(cfg: Configuration, endpoint: _Endpoint) -> bool:
+        """Whether this run should actually behave incrementally.
+
+        Mirrors the row's own ``load_type`` choice (``cfg.incremental``) unless
+        the object has no stable identifier at all (``endpoint.full_load_only``):
+        there, an incremental run would fetch only a narrow, recent slice while
+        the write side — having no primary key to upsert on — overwrites the
+        whole table, silently discarding every previously accumulated row. A
+        full load every run is the only way to keep the table complete for such
+        an object, so this forces one and says why, rather than quietly
+        honouring a setting that would corrupt the data.
+        """
+        if endpoint.full_load_only and cfg.incremental:
+            logger.warning(
+                "'%s' has no stable identifier in the Shoptet API, so an incremental load would only "
+                "capture the newest slice and overwrite the whole table with it — destroying "
+                "previously accumulated rows. Running a full load instead.",
+                cfg.object.value if cfg.object else "?",
+            )
+            return False
+        return cfg.incremental
+
     # -------------------------------------------------------------- fetching
 
     def _iter_records(
-        self, cfg: Configuration, endpoint: _Endpoint, previous_state: dict[str, Any]
+        self, cfg: Configuration, endpoint: _Endpoint, previous_state: dict[str, Any], effective_incremental: bool
     ) -> Iterator[dict[str, Any]]:
-        params = self._build_params(cfg, endpoint, previous_state)
+        params = self._build_params(cfg, endpoint, previous_state, effective_incremental)
 
         if endpoint.mode == FetchMode.SNAPSHOT:
             yield from self._client.iter_snapshot(endpoint.path, params)
@@ -596,7 +708,13 @@ class Component(ComponentBase):
     def _all_stock_ids(self) -> list[str]:
         return [str(stock["id"]) for stock in self._client.iter_list("/api/stocks", "stocks") if stock.get("id")]
 
-    def _build_params(self, cfg: Configuration, endpoint: _Endpoint, previous_state: dict[str, Any]) -> dict[str, Any]:
+    def _build_params(
+        self,
+        cfg: Configuration,
+        endpoint: _Endpoint,
+        previous_state: dict[str, Any],
+        effective_incremental: bool,
+    ) -> dict[str, Any]:
         """Assemble the query string for one object.
 
         Only parameters the endpoint actually declares are sent — Shoptet rejects
@@ -614,7 +732,7 @@ class Component(ComponentBase):
             params[endpoint.created_to] = date_to.strftime(_API_DATETIME_FORMAT)
 
         if endpoint.changed_from:
-            since = self._incremental_since(cfg, endpoint, previous_state, date_from)
+            since = self._incremental_since(cfg, endpoint, previous_state, date_from, effective_incremental)
             if since:
                 params[endpoint.changed_from] = since.strftime(_API_DATETIME_FORMAT)
 
@@ -630,15 +748,20 @@ class Component(ComponentBase):
         endpoint: _Endpoint,
         previous_state: dict[str, Any],
         date_from: datetime | None,
+        effective_incremental: bool,
     ) -> datetime | None:
         """Lower bound of the change window, or ``None`` for an unfiltered pull.
 
         The watermark is pulled back by ``lookback_hours`` so a record edited in
         the seconds around the previous run's cut-off is picked up again rather
-        than falling between two runs.
+        than falling between two runs. Takes the already-resolved
+        ``effective_incremental`` (not ``cfg.incremental`` directly) so a
+        ``full_load_only`` object never gets a change window even if some future
+        registry entry set both flags on it — the same trap this endpoint's
+        writer avoids by never upserting without a primary key.
         """
         is_changes_feed = endpoint.changed_from == "from"
-        if not cfg.incremental and not is_changes_feed:
+        if not effective_incremental and not is_changes_feed:
             return None
 
         watermark = self._parse_datetime(previous_state.get(_STATE_LAST_RUN))
@@ -754,12 +877,31 @@ class Component(ComponentBase):
             schema=schema,
         )
         pk_columns = set(effective_pk)
+        pk_width = len(effective_pk)
+        empty_pk_rows = 0
         # Headerless CSV: `schema` is authoritative for the column names, so a
         # header row would be imported as data.
         with open(table.full_path, "w", encoding="utf-8", newline="") as fh:
             csv_writer = csv.writer(fh)
             for row in writer.rows():
-                csv_writer.writerow([self._serialize_cell(row.get(col, ""), col in pk_columns) for col in columns])
+                values = [self._serialize_cell(row.get(col, ""), col in pk_columns) for col in columns]
+                # `_order_columns` puts the primary key first, so the first
+                # `pk_width` values are exactly the pk columns, in order.
+                if pk_width and all(value == _EMPTY_PK_PLACEHOLDER for value in values[:pk_width]):
+                    empty_pk_rows += 1
+                csv_writer.writerow(values)
+        if empty_pk_rows > 1:
+            # A schema-nullable-but-required id (e.g. `categories.guid`) can
+            # legitimately be null for one synthetic row; more than one means
+            # distinct rows are silently collapsing onto the same placeholder
+            # key and only the last of them survives the upsert.
+            logger.warning(
+                "%d rows in %s have an entirely empty primary key and collapsed onto the placeholder "
+                "value '%s'; Storage's primary-key handling will keep at most one of them.",
+                empty_pk_rows,
+                writer.name,
+                _EMPTY_PK_PLACEHOLDER,
+            )
         self.write_manifest(table)
         logger.info("Wrote %d rows to %s.", writer.count, writer.name)
 
@@ -816,8 +958,10 @@ class Component(ComponentBase):
             eshop = self._client.get_eshop_info()
         except UserException as err:
             return ValidationResult(f"Connection failed: {err}", MessageType.DANGER)
+        # `contactInformation.eshopName` is required and non-nullable on `/api/eshop`,
+        # so the fallback only covers a genuinely empty/unexpected response.
         contact = eshop.get("contactInformation") or {}
-        name = contact.get("eshopName") or contact.get("companyName") or eshop.get("projectId") or "the e-shop"
+        name = contact.get("eshopName") or "the e-shop"
         return ValidationResult(f"Connection to {name} succeeded.", MessageType.SUCCESS)
 
     @sync_action("listStocks")

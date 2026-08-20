@@ -79,7 +79,7 @@
           "Credit notes",
           "Delivery notes",
           "Proofs of payment",
-          "Abandoned carts",
+          "Abandoned carts (always full load — no stable ID in the API)",
           "Discount coupons",
           "Quantity discounts",
           "Blog articles",
@@ -144,7 +144,7 @@
         ]
       },
       "default": "incremental_load",
-      "description": "Incremental update only asks Shoptet for records changed since the previous run, where the endpoint supports it, and upserts them by primary key. Use a full load when you need deleted records to disappear from the table.",
+      "description": "Incremental update only asks Shoptet for records changed since the previous run, where the endpoint supports it, and upserts them by primary key. Use a full load when you need deleted records to disappear from the table. A few objects with no stable identifier in the Shoptet API (currently abandoned carts) always run as a full load regardless of this setting — the job log explains why.",
       "propertyOrder": 20
     },
     "lookback_hours": {
