@@ -74,6 +74,18 @@ class ShoptetClientError(Exception):
     """Unexpected API failure — surfaces as exit code 2."""
 
 
+class ShoptetApiError(UserException):
+    """A 4xx the user can act on, carrying the status so callers can branch on it.
+
+    Plain ``UserException`` loses the status, which forced the snapshot download to
+    treat *every* failure as "maybe it needs authentication" and retry blindly.
+    """
+
+    def __init__(self, message: str, status: int) -> None:
+        super().__init__(message)
+        self.status = status
+
+
 class _TransientError(Exception):
     """Retryable failure: network error, 429, 423 lock or any 5xx."""
 
@@ -294,7 +306,7 @@ class ShoptetClient:
                 f"Shoptet API returned a non-JSON response for {self._safe_url(url)} (status {response.status_code})."
             ) from err
 
-    def _user_error(self, response: requests.Response, url: str) -> UserException:
+    def _user_error(self, response: requests.Response, url: str) -> ShoptetApiError:
         """Turn a 4xx into an actionable user error.
 
         Shoptet reports failures as ``{"errors": [{"errorCode", "message", "instance"}]}``;
@@ -316,18 +328,23 @@ class ShoptetClient:
         endpoint = self._safe_url(url)
 
         if response.status_code in (401, 403):
-            return UserException(
+            return ShoptetApiError(
                 f"Shoptet API refused the request to {endpoint} (HTTP {response.status_code}): {detail}. "
                 "Check that the token is valid and that it has read rights for this endpoint group "
                 "(e-shop administration → Connections → Private API), or that the addon has the "
-                "endpoint approved in the API Partner section."
+                "endpoint approved in the API Partner section.",
+                response.status_code,
             )
         if response.status_code == 404:
-            return UserException(
+            return ShoptetApiError(
                 f"Shoptet API returned 404 for {endpoint}: {detail}. "
-                "The endpoint may not be enabled for this e-shop (module or tariff)."
+                "The endpoint may not be enabled for this e-shop (module or tariff).",
+                response.status_code,
             )
-        return UserException(f"Shoptet API call to {endpoint} failed (HTTP {response.status_code}): {detail}")
+        return ShoptetApiError(
+            f"Shoptet API call to {endpoint} failed (HTTP {response.status_code}): {detail}",
+            response.status_code,
+        )
 
     @staticmethod
     def _safe_url(url: str) -> str:
@@ -494,8 +511,14 @@ class ShoptetClient:
         """
         try:
             payload = self._request_with_retry("GET", result_url, headers={}, raw=True)
-        except UserException:
-            logger.debug("Snapshot result URL rejected an anonymous download; retrying authenticated.")
+        except ShoptetApiError as err:
+            # Only retry with credentials when the download was actually *refused*.
+            # Retrying a 404 (an expired result link) or any other 4xx cannot help,
+            # and doing so doubled the latency and produced a confusing two-attempt
+            # failure for a case authentication was never going to fix.
+            if err.status not in (401, 403):
+                raise
+            logger.debug("Snapshot result URL refused an anonymous download; retrying authenticated.")
             payload = self._request_with_retry("GET", result_url, raw=True)
 
         text = _decompress(payload).decode("utf-8", errors="replace")

@@ -70,6 +70,18 @@
           "action": "testConnection"
         }
       }
+    },
+    "list_approved_endpoints": {
+      "type": "button",
+      "format": "sync-action",
+      "propertyOrder": 60,
+      "description": "Lists the endpoint groups this token is actually allowed to read. A private API token only carries the groups the merchant granted it, and an addon only the ones Shoptet approved, so this is the quickest way to see why an object returns 403 on one e-shop and works on another.",
+      "options": {
+        "async": {
+          "label": "Show readable endpoints",
+          "action": "listApprovedEndpoints"
+        }
+      }
     }
   }
 }

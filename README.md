@@ -108,6 +108,27 @@ Sample configuration
 }
 ```
 
+Migrating from the permalink component
+--------------------------------------
+
+This is a hard cutover, not a drop-in swap. Two things a migrating configuration will hit:
+
+- **Column names change completely.** The old component's columns were the headers of
+  Shoptet's CSV exports; these are the REST API's JSON field names. Nothing downstream can
+  simply be repointed at the new table — every transformation, and anything referencing those
+  columns, has to be rewritten. Plan the migration as running both components side by side
+  until the downstream work is done.
+- **There is no successor to `additional_data`.** The old component accepted an arbitrary
+  permalink URL plus an output table name, so a merchant could pull any export Shoptet
+  happened to expose. This component reads a fixed set of API objects instead. Almost
+  everything the old escape hatch was used for has a real object here (see the table below),
+  but if you relied on a permalink with no API equivalent, raise it at
+  [ideas.keboola.com](https://ideas.keboola.com/) before switching.
+
+What you gain: full record detail instead of flat export columns, server-side incremental
+filtering, deletion detection via the change feeds, and no dependency on permalink hashes a
+merchant can regenerate.
+
 Supported objects
 =================
 

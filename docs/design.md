@@ -341,3 +341,24 @@ than silently omitted: surfacing them widens the output schema of existing table
 is a backward-compatibility decision for an existing configuration, not a bug fix. The
 `stock_movements` ones are the most clearly useful (they name the related order and
 product) and are the natural first follow-up.
+
+## Known limitation: column types are inferred per run
+
+`_TableWriter._observe_kind` infers each column's native type from the values seen in
+**that run only**, and `_finalize_table` writes a fresh manifest schema from it. So a
+column that happens to be all-integer in one incremental run and picks up a single
+fractional value in the next moves from `INTEGER` to `NUMERIC` in the manifest between
+runs — and could narrow the other way if the fractional values fall out of a later
+window.
+
+This is deliberate for a first release: the alternative is pinning a type per column per
+object across 56 objects, which means asserting types for fields the OpenAPI description
+often declares only as `string` (Shoptet returns monetary amounts as decimal strings, so
+inference is frequently *better* informed than the schema).
+
+The open question is how Keboola Storage handles a **narrowing** native-type change on an
+existing typed table between incremental loads. That was not verifiable without a live
+project, so it is flagged rather than resolved: worth a two-run smoke test on a
+numeric-ish field (`price`, `vatRate`) in cf-dev before a wide rollout. If narrowing turns
+out to be rejected, the fix is to widen monotonically by carrying the previous run's
+observed kinds in the state file, rather than to hardcode a type table.

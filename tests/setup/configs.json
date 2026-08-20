@@ -24,18 +24,6 @@
     }
   },
   {
-    "name": "03_listPriceLists",
-    "description": "listPriceLists sync action from /api/pricelists.",
-    "config": {
-      "action": "listPriceLists",
-      "parameters": {
-        "auth_type": "private_token",
-        "#private_api_token": "DUMMY_TOKEN",
-        "api_base_url": "https://api.docs.shoptet.com/_mock/shoptet-api/openapi"
-      }
-    }
-  },
-  {
     "name": "04_listIncludeSections",
     "description": "listIncludeSections sync action for object=orders — must return the six documented snapshot sections without any HTTP call (registry lookup only).",
     "config": {

@@ -777,8 +777,26 @@ class Component(ComponentBase):
             return date_from
 
         is_changes_feed = endpoint.changed_from == "from"
-        if not effective_incremental and not is_changes_feed:
-            return None
+        if not effective_incremental:
+            if not is_changes_feed:
+                return None
+            # A change feed cannot be read unwindowed — `from` is mandatory — so a
+            # full load still has to send one. It must NOT be the stored watermark:
+            # narrowing the fetch to "since the last run" while `_finalize_table`
+            # overwrites the whole table discards every previously accumulated
+            # event. That is the same shape as the `abandoned_carts` trap and the
+            # `full_load_only` gap, in the one place neither of those fixes reaches:
+            # an ordinary change feed whose row is switched to `full_load` after
+            # state already exists.
+            if date_from:
+                return date_from
+            logger.warning(
+                "A change feed cannot be read from the beginning of time — Shoptet requires a "
+                "'from' bound — so this full load covers the last %d days. Set a Date range to "
+                "choose the window explicitly.",
+                _CHANGES_DEFAULT_WINDOW_DAYS,
+            )
+            return datetime.now(UTC) - timedelta(days=_CHANGES_DEFAULT_WINDOW_DAYS)
 
         watermark = self._parse_datetime(previous_state.get(_STATE_LAST_RUN))
         if watermark:
@@ -988,20 +1006,12 @@ class Component(ComponentBase):
             if stock.get("id") is not None
         ]
 
-    @sync_action("listPriceLists")
-    def list_price_lists(self) -> list[SelectElement]:
-        return [
-            SelectElement(value=str(pricelist["id"]), label=str(pricelist.get("name") or pricelist["id"]))
-            for pricelist in self._client.iter_list("/api/pricelists", "pricelists")
-            if pricelist.get("id") is not None
-        ]
-
     @sync_action("listIncludeSections")
     def list_include_sections(self) -> list[SelectElement]:
         """Optional snapshot sections available for the object chosen in this row.
 
         Driven off the registry rather than hardcoded in the schema: the sections
-        differ per collection (orders has six, invoices one, most objects none),
+        differ per collection (orders has six, products twenty, most objects none),
         so a static list in the UI would offer sections the API would reject.
         """
         raw_object = self.configuration.parameters.get("object")

@@ -280,12 +280,45 @@ class TestChangeFeeds(ComponentTestCase):
         params = next(call[2] for call in session.calls if call[1] == "/api/orders/changes")
         self.assertEqual("2026-03-09T06:00:00+0000", params["from"])
 
-    def test_a_change_feed_still_sends_from_on_a_full_load(self):
+    @freeze_time("2026-03-16T00:00:00+00:00")
+    def test_a_full_load_ignores_the_stored_watermark(self):
+        """The value matters, not just the presence of `from`.
+
+        Asserting only `assertIn("from", params)` — as this test originally did —
+        cannot fail: a change feed always sends `from`. It therefore passed while the
+        code narrowed an explicit full load to the *stale watermark* and then
+        overwrote the whole table with that narrow slice, discarding every previously
+        accumulated event. Same shape as the `abandoned_carts` trap, third instance.
+        """
         self.write_config({"object": "orders_changes", "load_type": "full_load"})
         self.write_state({"last_run": "2026-03-09T06:00:00+0000"})
         session = self.run_component(self._ROUTES)
         params = next(call[2] for call in session.calls if call[1] == "/api/orders/changes")
-        self.assertIn("from", params)
+        # The default window from "now" (2026-03-09 minus lookback would be the bug).
+        self.assertEqual("2026-03-09T00:00:00+0000", params["from"])
+        self.assertFalse(self.manifest("orders_changes")["incremental"])
+
+    @freeze_time("2026-03-16T00:00:00+00:00")
+    def test_a_full_load_honours_an_explicit_date_range(self):
+        self.write_config(
+            {
+                "object": "orders_changes",
+                "load_type": "full_load",
+                "date_range": {"date_from": "2026-01-01"},
+            }
+        )
+        self.write_state({"last_run": "2026-03-09T06:00:00+0000"})
+        session = self.run_component(self._ROUTES)
+        params = next(call[2] for call in session.calls if call[1] == "/api/orders/changes")
+        self.assertEqual("2026-01-01T00:00:00+0000", params["from"])
+
+    def test_an_incremental_run_still_uses_the_watermark(self):
+        # The fix above must not break the normal incremental path.
+        self.write_config({"object": "orders_changes", "lookback_hours": 24})
+        self.write_state({"last_run": "2026-03-09T06:00:00+0000"})
+        session = self.run_component(self._ROUTES)
+        params = next(call[2] for call in session.calls if call[1] == "/api/orders/changes")
+        self.assertEqual("2026-03-08T06:00:00+0000", params["from"])
 
     def test_a_change_feed_key_includes_the_change_type(self):
         # `changeTime` alone is schema-nullable and not guaranteed unique across

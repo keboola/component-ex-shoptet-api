@@ -32,6 +32,7 @@ whole test passes while proving nothing.
 from __future__ import annotations
 
 import json
+import re
 import unittest
 from pathlib import Path
 
@@ -188,3 +189,24 @@ class TestRegistryAgainstTheApiSchema(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestSyncActionsAreReachable(unittest.TestCase):
+    """Every `@sync_action` must be wired to something in a schema.
+
+    A sync action the UI never references is dead code by definition: the user has
+    no button and no async-select that triggers it, so it is reachable only through
+    the raw component API. `listPriceLists` shipped that way — implemented, tested,
+    documented, and unreachable — because nothing tied the decorators to the schemas.
+    """
+
+    _SCHEMAS = ("configSchema.json", "configRowSchema.json")
+    _COMPONENT = Path(__file__).parent.parent / "src" / "component.py"
+    _CONFIG_DIR = Path(__file__).parent.parent / "component_config"
+
+    def test_every_sync_action_is_referenced_by_a_schema(self):
+        declared = set(re.findall(r'@sync_action\("([^"]+)"\)', self._COMPONENT.read_text()))
+        self.assertTrue(declared, "no @sync_action decorators found — has the file moved?")
+        wired = " ".join((self._CONFIG_DIR / name).read_text() for name in self._SCHEMAS)
+        unreachable = sorted(action for action in declared if f'"{action}"' not in wired)
+        self.assertEqual([], unreachable, "sync action(s) implemented but not reachable from any schema")
