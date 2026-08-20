@@ -13,6 +13,8 @@ import json
 import os
 import tempfile
 import unittest
+from dataclasses import replace
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, ClassVar
 from unittest import mock
@@ -22,7 +24,7 @@ from keboola.component.exceptions import UserException
 
 import client as client_module
 from component import _REGISTRY, Component, FetchMode
-from configuration import ObjectType
+from configuration import Configuration, ObjectType
 from tests.fake_api import FakeResponse, FakeSession, paginated
 
 _ORDER = {
@@ -509,6 +511,51 @@ class TestAbandonedCarts(ComponentTestCase):
         session = self.run_component(self._routes([{"date": "2026-01-01T00:00:00+0100"}]))
         params = next(call[2] for call in session.calls if call[1] == "/api/abandoned-carts/snapshot")
         self.assertNotIn("visitTimeFrom", params)
+
+    @staticmethod
+    def _config(**overrides: Any) -> Configuration:
+        params: dict[str, Any] = {
+            "auth_type": "private_token",
+            "#private_api_token": "token",
+            "object": "orders_changes",
+            **overrides,
+        }
+        return Configuration(**params)
+
+    def test_the_guard_holds_for_a_change_feed_too(self):
+        """The one shape where `full_load_only` used to be bypassed.
+
+        Checking this through `abandoned_carts` alone proves nothing: that entry has
+        no `changed_from` at all, so `_incremental_since` is never even consulted and
+        the assertion above cannot fail however the guard behaves. Change feeds are
+        different — their `from` is mandatory, so they deliberately skip the
+        incremental check, and a keyless one would have been date-windowed while
+        writing a table it cannot upsert into. No such object exists today; this
+        pins the guard so adding one stays safe.
+        """
+        keyless_change_feed = replace(_REGISTRY[ObjectType.orders_changes], primary_key=[], full_load_only=True)
+        window = Component._incremental_since(
+            Component.__new__(Component),
+            self._config(lookback_hours=24),
+            keyless_change_feed,
+            {"last_run": "2026-03-10T12:00:00+0000"},
+            None,
+            False,
+        )
+        self.assertIsNone(window, "a full_load_only change feed must never receive a watermark window")
+
+    def test_a_full_load_only_change_feed_still_honours_an_explicit_date(self):
+        # The guard refuses the automatic watermark, not a user-chosen date.
+        chosen = datetime(2026, 2, 1, tzinfo=UTC)
+        window = Component._incremental_since(
+            Component.__new__(Component),
+            self._config(lookback_hours=24),
+            replace(_REGISTRY[ObjectType.orders_changes], primary_key=[], full_load_only=True),
+            {"last_run": "2026-03-10T12:00:00+0000"},
+            chosen,
+            False,
+        )
+        self.assertEqual(chosen, window)
 
     def test_an_explicit_date_range_still_narrows_the_fetch(self):
         # Unlike the automatic incremental watermark, a user-chosen "Date range"

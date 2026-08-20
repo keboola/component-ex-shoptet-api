@@ -51,7 +51,9 @@ class TestRegistryAgainstTheApiSchema(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         raw = json.loads(_FIXTURE_PATH.read_text())
-        cls.fields: dict[str, set[str]] = {key: set(value) for key, value in raw.items() if not key.startswith("_")}
+        cls.extract: dict[str, dict] = {key: value for key, value in raw.items() if not key.startswith("_")}
+        cls.fields: dict[str, set[str]] = {key: set(value["fields"]) for key, value in cls.extract.items()}
+        cls.required: dict[str, set[str]] = {key: set(value["required"]) for key, value in cls.extract.items()}
 
     def test_fixture_covers_every_registry_entry(self):
         # A gap here would silently narrow every other test in this file rather
@@ -83,6 +85,84 @@ class TestRegistryAgainstTheApiSchema(unittest.TestCase):
             for child in endpoint.children:
                 if child.field not in known_fields:
                     violations.append(f"{obj.value}: child field '{child.field}' is not a real field on the API record")
+        self.assertEqual([], violations)
+
+    def test_every_declared_child_field_is_actually_requested(self):
+        """Existence is not availability — the gap that let a dead child table ship.
+
+        ``variant_parameters`` declared a ``values`` child against a field that is
+        genuinely in the schema, so the existence check above passed. But ``values``
+        is a *section on demand*: the endpoint only sends it when asked via
+        ``include``, so with no request the child table was empty on every run, for
+        every e-shop. A mock server hides this completely — Shoptet's docs mock
+        returns the full example payload regardless of ``include`` — which is why
+        this needs a schema-derived check rather than a recorded response.
+
+        Deliberately keyed on the endpoint's *documented section list*, not on
+        "absent from ``required``": plenty of fields are legitimately optional
+        without being gated (an order with no ``shippings``), and flagging those
+        would be noise.
+        """
+        violations = []
+        for obj, endpoint in _REGISTRY.items():
+            entry = self.extract.get(obj.value)
+            if entry is None:
+                continue
+            sections = set(entry["documented_include_sections"])
+            requested = set(endpoint.include_options) | {
+                part.strip() for part in str(endpoint.extra_params.get("include", "")).split(",") if part.strip()
+            }
+            for child in endpoint.children:
+                if child.field in sections and child.field not in requested:
+                    violations.append(
+                        f"{obj.value}: child '{child.field}' is a section on demand but is never requested — "
+                        f"add it to include_options (user-selectable) or extra_params['include'] (always)"
+                    )
+        self.assertEqual([], violations)
+
+    def test_no_include_option_is_invented(self):
+        """Every offered section must be one the endpoint documents.
+
+        Offering a section the API does not know means the request is rejected
+        outright, so a typo here breaks the object entirely rather than degrading it.
+        """
+        violations = []
+        for obj, endpoint in _REGISTRY.items():
+            entry = self.extract.get(obj.value)
+            if entry is None or not endpoint.include_options:
+                continue
+            unknown = sorted(set(endpoint.include_options) - set(entry["documented_include_sections"]))
+            if unknown:
+                violations.append(f"{obj.value}: include_options not documented by the endpoint: {unknown}")
+        self.assertEqual([], violations)
+
+    def test_page_size_matches_the_documented_cap(self):
+        """Shoptet rejects an over-cap ``itemsPerPage``, and every collection differs.
+
+        The caps live in prose in the API description, so the registry copies them by
+        hand — which is exactly the kind of constant that rots silently. Nothing else
+        in the suite pins them: raising ``articles`` from its real cap of 10 to 1000
+        used to pass every test, and would have failed on the first live run.
+        """
+        violations = []
+        for obj, endpoint in _REGISTRY.items():
+            entry = self.extract.get(obj.value)
+            if entry is None:
+                continue
+            cap = entry["items_per_page_cap"]
+            if endpoint.items_per_page is None:
+                if cap is not None and endpoint.mode.name in {"PAGINATED", "PER_STOCK"}:
+                    violations.append(f"{obj.value}: endpoint documents a cap of {cap} but none is declared")
+                continue
+            if cap is None:
+                violations.append(
+                    f"{obj.value}: declares items_per_page={endpoint.items_per_page} but the endpoint "
+                    f"documents no itemsPerPage parameter"
+                )
+            elif endpoint.items_per_page != cap:
+                violations.append(
+                    f"{obj.value}: declares items_per_page={endpoint.items_per_page}, documented cap is {cap}"
+                )
         self.assertEqual([], violations)
 
     def test_a_keyless_object_with_a_change_window_must_be_full_load_only(self):

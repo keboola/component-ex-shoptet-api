@@ -525,10 +525,10 @@ release.
 
 To make clear how much of the registry was actually exercised against the spec rather than assumed:
 
-- **Every `items_per_page` value** in the registry (25 paginated/per-stock entries) exactly matches the
+- **Every `items_per_page` value** in the registry (26 paginated/per-stock entries: 24 PAGINATED + 2 PER_STOCK) exactly matches the
   API's documented per-collection maximum (e.g. articles=10, reviews_products=20, categories=1000,
   suppliers=500, stock_supplies=1000, …) — a full match, zero discrepancies.
-- **Every `include` menu** wired up (`orders`: 6 values; `products`: 19 values; `invoices` /
+- **Every `include` menu** wired up (`orders`: 6 values; `products`: 20 values; `invoices` /
   `proforma_invoices` / `credit_notes`: 1 value each, `surchargeParameters`) exactly matches the
   operation-level documentation table for that specific endpoint, in the same order.
 - **Fetch-mode-vs-capability**: all 18 `FetchMode.LIST` entries were confirmed to have *no*

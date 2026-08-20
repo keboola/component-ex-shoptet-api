@@ -449,6 +449,13 @@ _REGISTRY: dict[ObjectType, _Endpoint] = {
         children=(_Child("values", "values"),),
         parent_prefix="parameter",
         items_per_page=100,
+        # `values` is a section on demand here (unlike filtering/surcharge parameters,
+        # where it is a required field), so without asking for it the child table is
+        # empty on every run. Requested unconditionally rather than offered as an
+        # `include_options` choice, because the child table is declared
+        # unconditionally — making it opt-in would just mean a table that silently
+        # stays empty unless the user happens to tick a box.
+        extra_params={"include": "values"},
     ),
     ObjectType.surcharge_parameters: _Endpoint(
         "/api/products/surcharge-parameters",
@@ -754,12 +761,21 @@ class Component(ComponentBase):
 
         The watermark is pulled back by ``lookback_hours`` so a record edited in
         the seconds around the previous run's cut-off is picked up again rather
-        than falling between two runs. Takes the already-resolved
-        ``effective_incremental`` (not ``cfg.incremental`` directly) so a
-        ``full_load_only`` object never gets a change window even if some future
-        registry entry set both flags on it — the same trap this endpoint's
-        writer avoids by never upserting without a primary key.
+        than falling between two runs.
+
+        A ``full_load_only`` endpoint is refused a watermark outright, before the
+        change-feed branch below. ``effective_incremental`` alone was not enough:
+        change feeds need a mandatory ``from`` and so bypass that flag, which meant
+        a hypothetical keyless change feed would still have been date-windowed while
+        writing a table it cannot upsert into — the exact history-destroying trap
+        ``full_load_only`` exists to prevent, re-armed with the flag and its test
+        both asserting it was safe. An explicit ``date_range`` is still honoured:
+        that is the user narrowing the pull on purpose, not an automatic watermark
+        silently shrinking it every run.
         """
+        if endpoint.full_load_only:
+            return date_from
+
         is_changes_feed = endpoint.changed_from == "from"
         if not effective_incremental and not is_changes_feed:
             return None

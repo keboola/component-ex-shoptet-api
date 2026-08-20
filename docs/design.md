@@ -106,9 +106,9 @@ registry entry's paths/keys were found to be wrong.
 | Capability | Verdict | Notes |
 |---|---|---|
 | Orders (`orders`, snapshot) | In scope | Children: items, shippings, payment methods, completion, payment transactions. `payment_transactions` child likely always empty — gap analysis #10 (deferred, needs a live payload to confirm). |
-| Order history / remarks (`order_history`, snapshot) | In scope | PK fixed to `["id"]` — gap analysis #8 (resolved). |
+| Order history / remarks (`order_history`, snapshot) | In scope | PK fixed to `["orderCode", "id"]` — gap analysis #8 (resolved, then amended: `id` reads as a per-order sequence, so `id` alone would merge every order's first remark). |
 | Orders — change feed (`orders_changes`) | In scope | PK is now `["code", "changeTime", "changeType"]` — gap analysis #9 (resolved). |
-| Products (`products`, snapshot) | In scope | `include` menu (19 values) verified exact match to spec. Two dead child declarations removed and documented — gap analysis #6 (resolved; grandchild-of-a-child splitting deferred, see §9). |
+| Products (`products`, snapshot) | In scope | `include` menu (20 values) verified exact match to spec, and now pinned by a test. Two dead child declarations removed and documented — gap analysis #6 (resolved; grandchild-of-a-child splitting deferred, see §9). |
 | Products — prices in all price lists (`product_pricelist_prices`) | In scope | PK fixed to `["productGuid", "code"]`, dead child declaration removed — gap analysis #7 (resolved). |
 | Products — change feed (`products_changes`) | In scope | PK fixed to key on `guid` — gap analysis #1 (resolved). |
 | Customers (`customers`, snapshot) | In scope | Child field corrected to `deliveryAddress` (singular) — gap analysis #4 (resolved). |
@@ -275,3 +275,69 @@ per-finding status. Findings 15-17 (new objects: `/api/shipments`, `/api/orders/
 settings/reference endpoints, the `quantity_discounts` snapshot variant) remain an explicit, recorded
 open decision — see "Deferred: candidate objects for a follow-up" in §4 — rather than a silently
 narrowed scope; a human (or a follow-up Tier-C planning pass) still needs to decide whether to add them.
+
+## Post-gate corrections (Phase 3 gate)
+
+An independent gate re-derived all 56 registry entries from the OpenAPI description and
+found two things the original gap analysis missed, plus stale counts in this document.
+Recorded here because both are classes of bug, not one-off slips.
+
+### `variant_parameters` declared a child table that could never populate
+
+`values` is a real field on that endpoint's record, so the existence check in
+`tests/test_registry_invariants.py` passed — but it is a **section on demand**: the
+endpoint only sends it when asked via `include`, and the entry requested nothing. The
+child table was therefore empty on every run for every e-shop. Its two sibling entries
+(`filtering_parameters`, `surcharge_parameters`) look identical but have `values` in
+their `required` set and no `include` parameter at all, which is why the entry read as
+correct.
+
+Two things made this hard to see, and both are now closed:
+
+- **The docs mock server hides it.** `https://api.docs.shoptet.com/_mock/...` returns the
+  full example payload regardless of `include`, so a smoke run against the mock showed
+  the child table populating normally. Mock coverage cannot prove availability — only a
+  schema-derived check can.
+- **The fixture recorded existence, not availability.** It listed field *names* only, so a
+  gated field was indistinguishable from a guaranteed one. It now also records `required`,
+  `has_include_param`, `documented_include_sections` and `items_per_page_cap`, and
+  `scripts/regenerate_field_extract.py` derives all of it from the published description
+  (`--check` fails when stale). New invariants: a child field that is a documented section
+  must actually be requested; no `include_options` entry may be undocumented; and
+  `items_per_page` must equal the documented cap — the last was previously unguarded, so
+  raising `articles` from its real cap of 10 to 1000 passed every test and would have
+  failed on the first live run.
+
+### `full_load_only` did not cover change feeds
+
+The flag forces a full load for an object with no identifier, so a date-windowed
+incremental run cannot overwrite the table with only its newest slice. But change feeds
+need a mandatory `from` and so deliberately bypass the incremental check — meaning a
+*keyless* change feed would still have been date-windowed while writing a table it cannot
+upsert into. The same history-destroying trap, re-armed, with both the flag and its test
+asserting it was safe. `_incremental_since` now refuses a watermark for any
+`full_load_only` endpoint before that branch is reached, while still honouring an explicit
+user `date_range`. No object hits this today; the test exists so adding one stays safe.
+
+The test that was supposed to cover this could not fail: it asserted `visitTimeFrom` was
+absent from an `abandoned_carts` request, but that entry has no `changed_from` at all, so
+`_incremental_since` is never consulted on that path. Replaced with two tests that
+exercise the guard directly on a synthetic keyless change feed.
+
+### Deferred: documented `include` sections that are not surfaced
+
+Three endpoints document optional sections the component never offers, so `_validate_include`
+tells the user the object "supports no optional sections":
+
+| Endpoint | Undeclared sections |
+|---|---|
+| `/api/eshop` | `orderAdditionalFields`, `orderStatuses`, `paymentMethods`, `shippingMethods`, `imageCuts`, `countries`, `cashDesk` |
+| `/api/parametric-categories` | `parameters` |
+| `/api/stocks/{stockId}/movements` | `orderCode`, `productGuid`, `historicalProductGuid` |
+
+These are data-completeness gaps, not bugs — nothing returns wrong data, and most of the
+`eshop` sections are separately extractable objects in their own right. Deferred rather
+than silently omitted: surfacing them widens the output schema of existing tables, which
+is a backward-compatibility decision for an existing configuration, not a bug fix. The
+`stock_movements` ones are the most clearly useful (they name the related order and
+product) and are the natural first follow-up.
