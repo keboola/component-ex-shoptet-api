@@ -204,6 +204,14 @@ class TestSyncActionsAreReachable(unittest.TestCase):
     _COMPONENT = Path(__file__).parent.parent / "src" / "component.py"
     _CONFIG_DIR = Path(__file__).parent.parent / "component_config"
 
+    def test_the_schemas_are_present(self):
+        # Checked separately and explicitly: if component_config/ is missing from the
+        # environment (it is not part of the production image), the reachability test
+        # below would raise rather than skip — but a future "fix" that skips on absence
+        # would make it silently vacuous in CI, which is the failure mode to prevent.
+        missing = [name for name in self._SCHEMAS if not (self._CONFIG_DIR / name).is_file()]
+        self.assertEqual([], missing, "component_config/ must be available wherever the tests run")
+
     def test_every_sync_action_is_referenced_by_a_schema(self):
         declared = set(re.findall(r'@sync_action\("([^"]+)"\)', self._COMPONENT.read_text()))
         self.assertTrue(declared, "no @sync_action decorators found — has the file moved?")
