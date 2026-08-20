@@ -238,19 +238,22 @@ real HTTP recordings, not hand-written cassettes. It covers:
   is itself `SNAPSHOT`-mode, so recording it hits the unresolvable-`resultUrl` limit above before
   the guard's effect could ever be observed end-to-end. Covered by
   `tests/test_component.py`'s stubbed-session tests instead.
-- **`stock_supplies`** is left out of the recorded suite for an unrelated reason: its primary
-  key includes a `code` field, and `keboola.datadirtest`'s recording pipeline always layers its
-  own baseline sanitizer — which redacts *any* JSON key literally named `code` (an
-  OAuth-authorization-code heuristic) — ahead of whatever this component declares in
-  `VCR_SANITIZERS`, corrupting that field in the cassette while the `expected/` output (captured
-  from the live, unsanitized response at record time) keeps the real value, so replay
-  deterministically diverges from `expected/`. `stock_movements` (no `code` field) is used for
-  both `PER_STOCK` variants instead. `eshop` and `orders_changes` hit the same collision on
-  fields that could not be swapped out (`currencies[].code`/`languages[].code`, and the change
-  feed's own identifier) — see `tests/setup/record_code_safe.py` for the sanitizer-patch
-  workaround used to record those two anyway (this component's OAuth flow never carries a
-  real OAuth "code" grant parameter, so excluding "code" from the redacted-field set for
-  recording never risks leaking an actual secret).
+A note on the `code` sanitizer collision, since it shapes how cassettes must be recorded:
+`keboola.datadirtest`'s recording pipeline always layers its own baseline sanitizer ahead of
+whatever a component declares in `VCR_SANITIZERS` — the two compose rather than swap — and that
+baseline redacts *any* JSON key literally named `code`, as an OAuth-authorization-code
+heuristic. Shoptet uses `code` pervasively as a plain business identifier: order and invoice
+codes, the identifier on five of the seven change feeds, `stock_supplies`' primary key,
+`eshop.currencies[].code`. Recording therefore writes `REDACTED` into the cassette while
+`expected/` (captured from the live, unsanitized response) keeps the real value, so replay
+diverges deterministically — a guaranteed failure, not a flaky one.
+
+Any object whose payload touches a `code` key must therefore be recorded with
+`tests/setup/record_code_safe.py` rather than the plain scaffold CLI; it drops only `code` from
+the baseline field set and leaves every other default in place. That is safe for this component
+specifically because its addon OAuth flow exchanges a permanent token over a `Bearer` header and
+has no `code` grant parameter anywhere in its request or response surface, so `code` is never a
+secret here.
 - Only a representative object was recorded per fetch mode / change feed, not all ~56
   `ObjectType` values — the remaining `PAGINATED`/`LIST` reference-data objects share the exact
   same code paths as the ones recorded here and are already schema-checked by

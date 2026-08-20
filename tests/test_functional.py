@@ -54,5 +54,17 @@ def test_functional(test_name):
         data_dir=FUNCTIONAL_DIR,
         component_script=COMPONENT_SCRIPT,
         selected_tests=[test_name],
+        # Left at the library default (off), deliberately. The committed
+        # output_snapshot.json files therefore assert nothing, which is not ideal —
+        # their row counts would be a cheap guard against a future change that
+        # silently extracts zero rows. But turning it on fails every case that emits
+        # a manifest: the validator re-serializes each .manifest with json.dumps()
+        # defaults and compares that byte length against the on-disk length it
+        # recorded, so a 1269-byte manifest is measured as 782 and reported as
+        # "content changed" while the file is in fact identical (verified: 782 is
+        # exactly json.dumps(manifest) with default separators). That is an upstream
+        # bug in keboola.datadirtest's snapshot handling, not a defect here, so
+        # enabling it would only make the suite red for a non-reason. Table content
+        # is already compared byte-exactly against `expected/`.
     )
     tester.run()
