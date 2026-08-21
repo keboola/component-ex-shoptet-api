@@ -20,7 +20,7 @@
       "name": "changeTime",
       "data_type": {
         "base": {
-          "type": "TIMESTAMP"
+          "type": "STRING"
         }
       },
       "nullable": true,

@@ -953,15 +953,21 @@ class Component(ComponentBase):
                 "Primary-key column(s) %s are absent from %s; loading without them.", ", ".join(missing), writer.name
             )
         columns = self._order_columns(writer.columns, effective_pk)
-        schema = {col: ColumnDefinition(data_types=self._base_type_for(col, writer.kind(col))) for col in columns}
+        pk_set = set(effective_pk)
+        schema = {
+            col: ColumnDefinition(data_types=self._base_type_for(col, writer.kind(col), col in pk_set))
+            for col in columns
+        }
         table = self.create_out_table_definition(
             f"{writer.name}.csv",
             primary_key=effective_pk,
             incremental=incremental and bool(effective_pk),
             schema=schema,
         )
-        pk_columns = set(effective_pk)
-        timestamp_columns = {col for col in columns if writer.kind(col) == "timestamp"}
+        pk_columns = pk_set
+        # Primary keys are STRING (see _base_type_for), so their values are written
+        # exactly as the API returned them rather than reformatted.
+        timestamp_columns = {col for col in columns if writer.kind(col) == "timestamp" and col not in pk_columns}
         pk_width = len(effective_pk)
         empty_pk_rows = 0
         # Headerless CSV: `schema` is authoritative for the column names, so a
@@ -994,7 +1000,16 @@ class Component(ComponentBase):
         logger.info("Wrote %d rows to %s.", writer.count, writer.name)
 
     @staticmethod
-    def _base_type_for(name: str, kind: str) -> BaseType:
+    def _base_type_for(name: str, kind: str, is_primary_key: bool = False) -> BaseType:
+        if is_primary_key:
+            # Always STRING, whatever the values look like. A primary-key cell that
+            # would otherwise be empty is written as a placeholder (Keboola PK columns
+            # are NOT NULL, so an empty is not an option), and that placeholder is not
+            # a valid timestamp or integer — so a typed PK column fails the whole table
+            # load the first time a key component is null. Shoptet makes this concrete:
+            # `changeTime` is part of every change feed's key and is schema-nullable,
+            # and most reference objects are keyed on a numeric `id`.
+            return BaseType.string()
         if kind == "timestamp":
             return BaseType.timestamp()
         if kind == "integer":

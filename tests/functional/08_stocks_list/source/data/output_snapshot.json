@@ -17,9 +17,9 @@
     },
     "stocks.csv.manifest": {
       "columns": null,
-      "hash": "sha256:4fc17d1a672db8ed8e9b90af2617f21a2a463f31d189b93d45ad80e8bcd2b9dc",
+      "hash": "sha256:f3fe12b636fad547d28f3b691deeec771b61027ac15f4e4c0aafcef22015d774",
       "row_count": null,
-      "size_bytes": 1098
+      "size_bytes": 1097
     }
   },
   "version": "1.0"

@@ -26,9 +26,9 @@
     },
     "customer_groups.csv.manifest": {
       "columns": null,
-      "hash": "sha256:0e4ca1e791a54b69e78f731344ed44aa0e3ce2daaaccaa3690ffc1bd2c7b92bf",
+      "hash": "sha256:eac9cd01c42e7970536ff346dcde6c6ad956a534c774e8e2d6f1f5b7dfc8d827",
       "row_count": null,
-      "size_bytes": 2475
+      "size_bytes": 2474
     }
   },
   "version": "1.0"

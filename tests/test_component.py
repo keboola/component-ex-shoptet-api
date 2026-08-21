@@ -182,7 +182,10 @@ class TestSnapshotExtraction(ComponentTestCase):
 
         item_types = {c["name"]: c["data_type"]["base"]["type"] for c in self.manifest("orders_items")["schema"]}
         self.assertEqual("NUMERIC", item_types["amount"])
-        self.assertEqual("INTEGER", item_types["row_number"])
+        # `row_number` is part of the child key, and primary-key columns are STRING
+        # so they can hold the empty placeholder — see TestPrimaryKeyTyping.
+        self.assertEqual("STRING", item_types["row_number"])
+        self.assertEqual("STRING", item_types["order_code"])
 
     def test_an_empty_snapshot_writes_no_table(self):
         self.write_config({"object": "orders", "load_type": "full_load"})
@@ -694,6 +697,49 @@ class TestColumnTypesAcrossRuns(ComponentTestCase):
         )
         self.run_component(_snapshot_routes([_ORDER]))
         self.assertEqual("numeric", self.state()["column_kinds"]["orders_shippings"]["x"])
+
+
+class TestPrimaryKeyTyping(ComponentTestCase):
+    """Primary-key columns are STRING, whatever their values look like.
+
+    An empty primary-key cell is written as a placeholder — Keboola PK columns are
+    NOT NULL, so an empty is not an option — and that placeholder is not a valid
+    timestamp or integer. A typed PK column therefore fails the entire table load the
+    first time a key component is null. Shoptet makes it concrete: `changeTime` is
+    part of every change feed's key and is schema-nullable.
+    """
+
+    _ROUTES: ClassVar[dict[str, Any]] = {
+        "/api/orders/changes": paginated(
+            [
+                {"code": "1", "changeTime": "2026-03-01T10:00:00+0100", "changeType": "edit"},
+                {"code": "2", "changeTime": None, "changeType": "delete"},
+            ],
+            "changes",
+            page=1,
+            page_count=1,
+        )
+    }
+
+    def test_a_nullable_timestamp_in_the_key_is_typed_string(self):
+        self.write_config({"object": "orders_changes", "load_type": "full_load"})
+        self.run_component(self._ROUTES)
+        types = {c["name"]: c["data_type"]["base"]["type"] for c in self.manifest("orders_changes")["schema"]}
+        self.assertEqual("STRING", types["changeTime"], "a typed PK column cannot hold the empty placeholder")
+
+    def test_the_placeholder_is_written_and_the_key_stays_loadable(self):
+        self.write_config({"object": "orders_changes", "load_type": "full_load"})
+        self.run_component(self._ROUTES)
+        _, rows = self.read_table("orders_changes")
+        self.assertEqual(["2026-03-01T10:00:00+0100", "__empty__"], [r["changeTime"] for r in rows])
+
+    def test_key_values_are_not_reformatted(self):
+        # Non-key timestamps are normalised for the warehouse; key values are left
+        # exactly as the API returned them so a key can never shift under us.
+        self.write_config({"object": "orders_changes", "load_type": "full_load"})
+        self.run_component(self._ROUTES)
+        _, rows = self.read_table("orders_changes")
+        self.assertEqual("2026-03-01T10:00:00+0100", rows[0]["changeTime"])
 
 
 class TestRegistry(unittest.TestCase):

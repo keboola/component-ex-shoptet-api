@@ -452,3 +452,24 @@ and it is included in the platform smoke configuration for that reason.
 
 What remains genuinely unobserved is only the combination of a null timestamp *and* a
 real e-shop's sparse data. The mechanism is accounted for; the observation is not.
+
+### Primary-key columns are always STRING
+
+A primary-key cell that would otherwise be empty is written as a placeholder, because
+Keboola primary-key columns are physically NOT NULL and an empty CSV field imports as
+NULL. That placeholder is not a valid timestamp or integer — so **any non-string typed
+primary-key column fails the entire table load the first time a key component is null.**
+
+Shoptet makes this concrete rather than theoretical: `changeTime` is part of every change
+feed's key and is schema-nullable, and most reference objects are keyed on a numeric
+`id`. Under authoritative data types that is a live failure across a large share of the
+component's surface.
+
+So `_base_type_for` returns STRING for any primary-key column regardless of the values
+observed, and key values are written exactly as the API returned them — the timestamp
+normalisation that non-key columns get is deliberately not applied, so a key can never
+shift under a downstream consumer because of a formatting change on our side.
+
+The cost is losing the native type on key columns (`id` arrives as STRING rather than
+INTEGER). That is the right trade: a string key is normal in Keboola and always loads,
+whereas a typed key is a load failure waiting for its first null.

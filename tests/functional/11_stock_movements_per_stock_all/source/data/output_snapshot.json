@@ -22,9 +22,9 @@
     },
     "stock_movements.csv.manifest": {
       "columns": null,
-      "hash": "sha256:e0b2b62b84eeeced61d2dec3ee65788584fe3e56084f5336c3aed74be6895db5",
+      "hash": "sha256:1eff3399e37e50f79de311fd9a1e2b04c7ba96aca2f55f346853929a77a72676",
       "row_count": null,
-      "size_bytes": 1861
+      "size_bytes": 1860
     }
   },
   "version": "1.0"
