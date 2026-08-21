@@ -149,17 +149,17 @@ class TestSnapshotExtraction(ComponentTestCase):
         self.run_component(_snapshot_routes([_ORDER]))
 
         columns, rows = self.read_table("orders_items")
-        self.assertEqual(["order_code", "_row_number"], columns[:2])
+        self.assertEqual(["order_code", "row_number"], columns[:2])
         self.assertEqual(["2026000001", "2026000001"], [row["order_code"] for row in rows])
         # Both items share a product code, so the position is what tells them apart.
-        self.assertEqual(["1", "2"], [row["_row_number"] for row in rows])
+        self.assertEqual(["1", "2"], [row["row_number"] for row in rows])
         self.assertEqual(["SKU-1", "SKU-1"], [row["code"] for row in rows])
 
     def test_child_primary_key_is_the_parent_key_plus_the_position(self):
         self.write_config({"object": "orders", "load_type": "full_load"})
         self.run_component(_snapshot_routes([_ORDER]))
         self.assertEqual(
-            ["order_code", "_row_number"],
+            ["order_code", "row_number"],
             [column["name"] for column in self.manifest("orders_items")["schema"] if column.get("primary_key")],
         )
 
@@ -182,7 +182,7 @@ class TestSnapshotExtraction(ComponentTestCase):
 
         item_types = {c["name"]: c["data_type"]["base"]["type"] for c in self.manifest("orders_items")["schema"]}
         self.assertEqual("NUMERIC", item_types["amount"])
-        self.assertEqual("INTEGER", item_types["_row_number"])
+        self.assertEqual("INTEGER", item_types["row_number"])
 
     def test_an_empty_snapshot_writes_no_table(self):
         self.write_config({"object": "orders", "load_type": "full_load"})
@@ -248,7 +248,7 @@ class TestLoadTypesAndWindows(ComponentTestCase):
     def test_the_watermark_is_the_run_start_time(self):
         self.write_config({"object": "orders"})
         self.run_component(_snapshot_routes([_ORDER]))
-        self.assertEqual({"last_run": "2026-05-10T08:00:00+0000"}, self.state())
+        self.assertEqual("2026-05-10T08:00:00+0000", self.state()["last_run"])
 
     def test_an_unparseable_date_is_a_user_error(self):
         self.write_config({"object": "orders", "date_range": {"date_from": "the day before the thing"}})
@@ -652,6 +652,48 @@ class TestEmptyPrimaryKeyCollisions(ComponentTestCase):
         self.write_config({"object": "categories", "load_type": "full_load"})
         with self.assertNoLogs("component", level="WARNING"):
             self.run_component(routes)
+
+
+class TestColumnTypesAcrossRuns(ComponentTestCase):
+    """Types must widen across runs, never narrow.
+
+    Column types are inferred from the values a run actually sees. Storage tolerates
+    a changing declared type while every column is VARCHAR, but once the component's
+    `dataTypeSupport` is authoritative a run that re-declares INTEGER over a NUMERIC
+    column is a hard load failure. So each run seeds its inference with the kinds
+    previous runs recorded, and `_merge_kind` only ever broadens.
+    """
+
+    def test_a_previously_widened_column_stays_widened(self):
+        self.write_config({"object": "orders", "load_type": "full_load"})
+        # Run 1: a fractional amount makes the column numeric.
+        self.run_component(_snapshot_routes([{**_ORDER, "items": [{"code": "A", "amount": 2.5}]}]))
+        first = self.state()["column_kinds"]["orders_items"]["amount"]
+        self.assertEqual("numeric", first)
+
+        # Run 2 sees only whole numbers; without carried state it would say INTEGER.
+        self.write_state(self.state())
+        self.run_component(_snapshot_routes([{**_ORDER, "items": [{"code": "A", "amount": 2}]}]))
+        types = {c["name"]: c["data_type"]["base"]["type"] for c in self.manifest("orders_items")["schema"]}
+        self.assertEqual("NUMERIC", types["amount"], "a NUMERIC column must not be re-declared INTEGER")
+
+    def test_kinds_are_persisted_per_table(self):
+        self.write_config({"object": "orders", "load_type": "full_load"})
+        self.run_component(_snapshot_routes([_ORDER]))
+        kinds = self.state()["column_kinds"]
+        self.assertIn("orders", kinds)
+        self.assertIn("orders_items", kinds)
+        self.assertEqual("boolean", kinds["orders"]["cashDeskOrder"])
+
+    def test_kinds_for_tables_this_run_did_not_write_are_kept(self):
+        # Dropping them would let a later run re-narrow a column that is only
+        # populated by some runs (an optional child table, say).
+        self.write_config({"object": "orders", "load_type": "full_load"})
+        self.write_state(
+            {"last_run": "2026-01-01T00:00:00+0000", "column_kinds": {"orders_shippings": {"x": "numeric"}}}
+        )
+        self.run_component(_snapshot_routes([_ORDER]))
+        self.assertEqual("numeric", self.state()["column_kinds"]["orders_shippings"]["x"])
 
 
 class TestRegistry(unittest.TestCase):

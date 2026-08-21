@@ -362,3 +362,41 @@ project, so it is flagged rather than resolved: worth a two-run smoke test on a
 numeric-ish field (`price`, `vatRate`) in cf-dev before a wide rollout. If narrowing turns
 out to be rejected, the fix is to widen monotonically by carrying the previous run's
 observed kinds in the state file, rather than to hardcode a type table.
+
+
+## Findings from the first real platform run (Phase 7)
+
+Two defects that only a job on the platform could surface. Both were invisible locally
+because the local suite compares the component's *own* output, never what Storage does
+with it.
+
+### Storage strips a leading underscore from a column name
+
+The child-row position column was written as `_row_number` and landed in Storage as
+`row_number`. The primary key was applied correctly to the renamed column
+(`parameter_id|row_number`), so nothing broke — but every document and manifest said
+`_row_number`, so a transformation written against the documented name would reference
+a column that does not exist. The column is now named `row_number` at the source, so
+what the component writes is what arrives.
+
+### Typed manifests were silently ignored
+
+Every column arrived as `VARCHAR` with `keboola_base_type: null`, despite the component
+declaring INTEGER / NUMERIC / BOOLEAN / TIMESTAMP for each one. The cause is the
+Developer Portal's `dataTypeSupport`, which the bootstrap release left at `none`; with
+that setting Storage discards the schema in the manifest. All the type inference was
+dead weight on the platform.
+
+Turning it to `authoritative` would honour the schema — but doing that alone would have
+converted the per-run inference into a live failure, which is why the inference was
+fixed first. Types were previously derived from the values a single run happened to see,
+so a column holding `3.5` in one run and only `3` in the next would be re-declared
+INTEGER over a NUMERIC column. Harmless while everything is VARCHAR; a hard load
+failure once types are real. The state file now carries each table's observed kinds
+(`column_kinds`) and every run seeds its inference with them, so `_merge_kind` can only
+broaden. Kinds are kept for tables a given run wrote nothing to, since an optional child
+table that appears only in some runs would otherwise be free to narrow.
+
+This resolves the open question recorded above under "Known limitation: column types are
+inferred per run" — the narrowing risk is closed at the source rather than left to
+Storage's tolerance.

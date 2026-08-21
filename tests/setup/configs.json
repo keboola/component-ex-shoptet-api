@@ -150,7 +150,7 @@
   },
   {
     "name": "13_variant_parameters_child_tables",
-    "description": "Child-table split: variant_parameters' nested `values` array becomes variant_parameters_values.csv keyed by parameter_id + _row_number (extract_child_tables=true, the default).",
+    "description": "Child-table split: variant_parameters' nested `values` array becomes variant_parameters_values.csv keyed by parameter_id + row_number (extract_child_tables=true, the default).",
     "config": {
       "action": "run",
       "parameters": {

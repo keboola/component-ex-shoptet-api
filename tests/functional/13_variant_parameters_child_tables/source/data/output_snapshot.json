@@ -37,9 +37,9 @@
     },
     "variant_parameters_values.csv.manifest": {
       "columns": null,
-      "hash": "sha256:ec850ab48e4c5abe0bec922cce8a3249485e338160049d5ca537a5b52528d9f3",
+      "hash": "sha256:04a70c6f4f6b02a4b5e000b8de05436ce878552048678dab056cedd04de0d07f",
       "row_count": null,
-      "size_bytes": 1396
+      "size_bytes": 1395
     }
   },
   "version": "1.0"

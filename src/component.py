@@ -56,6 +56,13 @@ VCR_SANITIZERS = [DefaultSanitizer(sensitive_fields=_SENSITIVE_FIELDS)]
 logger = logging.getLogger(__name__)
 
 _STATE_LAST_RUN = "last_run"
+# Inferred column kinds from previous runs, per table. Types are inferred from the
+# values actually seen, so without this a column that held 3.5 last run and only 3
+# this run would be re-declared INTEGER over a NUMERIC column. Storage tolerates
+# that while everything is VARCHAR, but rejects it once `dataTypeSupport` is
+# authoritative. Seeding each writer with the previous kinds makes widening
+# monotonic: `_merge_kind` only ever broadens, so a type never narrows.
+_STATE_COLUMN_KINDS = "column_kinds"
 
 # Shoptet expects ISO 8601 with a numeric offset and no colon ("2017-12-12T22:08:01+0100").
 _API_DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
@@ -68,7 +75,10 @@ _EMPTY_PK_PLACEHOLDER = "__empty__"
 # key: Shoptet line items carry no stable id of their own (an order item has only
 # a product code, which can legitimately repeat within one order), so the index
 # is the only thing that identifies a row uniquely and reproducibly.
-_ROW_NUMBER_COLUMN = "_row_number"
+# Deliberately no leading underscore: Keboola Storage strips one on import, so a
+# `_row_number` column lands as `row_number` and every transformation written
+# against the documented name would reference a column that does not exist.
+_ROW_NUMBER_COLUMN = "row_number"
 
 # The `changes` endpoints require a `from` timestamp. On a first run there is no
 # watermark and possibly no configured date, so fall back to a window that is
@@ -545,10 +555,12 @@ class _TableWriter:
     then streamed back into the output CSV once the whole column set is known.
     """
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, known_kinds: dict[str, str] | None = None) -> None:
         self.name = name
         self.columns: dict[str, None] = {}  # insertion-ordered set of every key seen
-        self._kinds: dict[str, str] = {}
+        # Pre-seeded with the kinds previous runs observed, so inference widens
+        # across runs instead of being re-derived from this run's values alone.
+        self._kinds: dict[str, str] = dict(known_kinds or {})
         self.count = 0
         # Deliberately not a context manager: the handle stays open for the whole
         # extraction and is released by close() in Component.run()'s finally block.
@@ -586,6 +598,10 @@ class _TableWriter:
 
     def kind(self, column: str) -> str:
         return self._kinds.get(column, "string")
+
+    def observed_kinds(self) -> dict[str, str]:
+        """Every kind seen, for persisting into the state file."""
+        return dict(self._kinds)
 
     def rows(self) -> Iterator[dict[str, Any]]:
         self._fh.flush()
@@ -627,11 +643,13 @@ class Component(ComponentBase):
         run_started_at = datetime.now(UTC)
         previous_state = self.get_state_file() or {}
 
+        known_kinds: dict[str, dict[str, str]] = previous_state.get(_STATE_COLUMN_KINDS) or {}
+
         writers: dict[str, _TableWriter] = {}
         try:
-            parent_writer = self._writer(writers, cfg.object.value)
+            parent_writer = self._writer(writers, cfg.object.value, known_kinds)
             for record in self._iter_records(cfg, endpoint, previous_state, effective_incremental):
-                self._write_record(record, cfg, endpoint, parent_writer, writers)
+                self._write_record(record, cfg, endpoint, parent_writer, writers, known_kinds)
             for writer in writers.values():
                 primary_key = (
                     endpoint.primary_key if writer.name == cfg.object.value else self._child_primary_key(endpoint)
@@ -641,7 +659,15 @@ class Component(ComponentBase):
             for writer in writers.values():
                 writer.close()
 
-        self.write_state_file({_STATE_LAST_RUN: run_started_at.strftime(_API_DATETIME_FORMAT)})
+        # Carry every table's observed kinds forward, including tables this run wrote
+        # nothing to — dropping them would let a later run re-narrow a column.
+        merged_kinds = {**known_kinds, **{name: w.observed_kinds() for name, w in writers.items()}}
+        self.write_state_file(
+            {
+                _STATE_LAST_RUN: run_started_at.strftime(_API_DATETIME_FORMAT),
+                _STATE_COLUMN_KINDS: merged_kinds,
+            }
+        )
         logger.info("Extraction of '%s' finished.", cfg.object.value)
 
     @staticmethod
@@ -839,6 +865,7 @@ class Component(ComponentBase):
         endpoint: _Endpoint,
         parent_writer: _TableWriter,
         writers: dict[str, _TableWriter],
+        known_kinds: dict[str, dict[str, str]] | None = None,
     ) -> None:
         """Write one API record as a parent row plus any child rows."""
         assert cfg.object is not None
@@ -849,7 +876,7 @@ class Component(ComponentBase):
                 rows = remaining.pop(child.field, None)
                 if not isinstance(rows, list) or not rows:
                     continue
-                child_writer = self._writer(writers, f"{cfg.object.value}_{child.suffix}")
+                child_writer = self._writer(writers, f"{cfg.object.value}_{child.suffix}", known_kinds)
                 for index, child_row in enumerate(rows, start=1):
                     if not isinstance(child_row, dict):
                         # A scalar array (e.g. a list of codes) still deserves a row.
@@ -858,10 +885,12 @@ class Component(ComponentBase):
         parent_writer.write(self._flatten(remaining))
 
     @staticmethod
-    def _writer(writers: dict[str, _TableWriter], name: str) -> _TableWriter:
+    def _writer(
+        writers: dict[str, _TableWriter], name: str, known_kinds: dict[str, dict[str, str]] | None = None
+    ) -> _TableWriter:
         writer = writers.get(name)
         if writer is None:
-            writer = _TableWriter(name)
+            writer = _TableWriter(name, (known_kinds or {}).get(name))
             writers[name] = writer
         return writer
 

@@ -157,15 +157,15 @@ carry an inferred schema (integer / numeric / boolean / timestamp / string).
 | Table                       | Primary key                    |
 |-----------------------------|--------------------------------|
 | `orders`                    | `code`                         |
-| `orders_items`              | `order_code`, `_row_number`    |
+| `orders_items`              | `order_code`, `row_number`    |
 | `products`                  | `guid`                         |
-| `products_variants`         | `product_guid`, `_row_number`  |
+| `products_variants`         | `product_guid`, `row_number`  |
 | `customers`                 | `guid`                         |
 | `invoices`                  | `code`                         |
 | `stock_supplies`            | `stock_id`, `productGuid`, `code` |
 | `eshop`                     | none (single row, always overwritten) |
 
-`_row_number` is the position of a child row inside its parent. Shoptet line items carry no
+`row_number` is the position of a child row inside its parent. Shoptet line items carry no
 id of their own — an order item has only a product code, which can repeat within one order —
 so the position is what identifies a row uniquely and reproducibly.
 
@@ -229,7 +229,7 @@ real HTTP recordings, not hand-written cassettes. It covers:
   `customer_groups`), `SINGLE` (`eshop`, whose empty primary key is by design), `PER_STOCK`
   (`stock_movements`, both fanned out over every stock and pinned via `stock_id`).
 - **The child-table split** — `variant_parameters`' nested `values` array becomes
-  `variant_parameters_values.csv` keyed by `parameter_id` + `_row_number`; a paired test with
+  `variant_parameters_values.csv` keyed by `parameter_id` + `row_number`; a paired test with
   `extract_child_tables: false` proves the same array instead stays inline as a JSON-string
   column with no child table produced.
 - **A change feed** (`orders_changes`) — one test proves the mandatory `from` window is

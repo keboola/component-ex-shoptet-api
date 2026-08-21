@@ -17,7 +17,7 @@
       "primary_key": true
     },
     {
-      "name": "_row_number",
+      "name": "row_number",
       "data_type": {
         "base": {
           "type": "INTEGER"
