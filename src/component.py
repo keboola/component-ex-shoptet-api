@@ -85,8 +85,21 @@ _ROW_NUMBER_COLUMN = "row_number"
 # useful rather than failing.
 _CHANGES_DEFAULT_WINDOW_DAYS = 7
 
-# Column-name hints that mark an ISO string as a timestamp rather than text.
-_TIMESTAMP_COLUMN_HINTS = ("time", "date")
+
+def _parse_api_timestamp(value: Any) -> datetime | None:
+    """Parse a Shoptet timestamp, or return None if the value is not one.
+
+    Shoptet emits ISO 8601 with a colon-less offset ("2018-05-29T09:02:27+0200"),
+    which `fromisoformat` accepts from 3.11 on. Anything else — a plain string, a
+    date-like word, a number formatted as text — returns None and is treated as
+    text, so a column is only ever typed TIMESTAMP when its values really are.
+    """
+    if not isinstance(value, str) or len(value) < 10:
+        return None
+    try:
+        return datetime.fromisoformat(value)
+    except ValueError:
+        return None
 
 
 class FetchMode(Enum):
@@ -592,6 +605,14 @@ class _TableWriter:
             kind = "integer"
         elif isinstance(value, float):
             kind = "numeric"
+        elif _parse_api_timestamp(value) is not None:
+            # Judged by whether the value actually parses, not by the column's name.
+            # A name heuristic ("anything containing time/date is a timestamp") typed
+            # columns that merely look temporal, and — worse — claimed TIMESTAMP for
+            # values Snowflake then refused, failing the whole table load. Any string
+            # that does not parse simply stays a string, so a mixed column degrades to
+            # text instead of breaking the load.
+            kind = "timestamp"
         else:
             kind = "string"
         self._kinds[key] = _merge_kind(self._kinds.get(key), kind)
@@ -940,6 +961,7 @@ class Component(ComponentBase):
             schema=schema,
         )
         pk_columns = set(effective_pk)
+        timestamp_columns = {col for col in columns if writer.kind(col) == "timestamp"}
         pk_width = len(effective_pk)
         empty_pk_rows = 0
         # Headerless CSV: `schema` is authoritative for the column names, so a
@@ -947,7 +969,10 @@ class Component(ComponentBase):
         with open(table.full_path, "w", encoding="utf-8", newline="") as fh:
             csv_writer = csv.writer(fh)
             for row in writer.rows():
-                values = [self._serialize_cell(row.get(col, ""), col in pk_columns) for col in columns]
+                values = [
+                    self._serialize_cell(row.get(col, ""), col in pk_columns, col in timestamp_columns)
+                    for col in columns
+                ]
                 # `_order_columns` puts the primary key first, so the first
                 # `pk_width` values are exactly the pk columns, in order.
                 if pk_width and all(value == _EMPTY_PK_PLACEHOLDER for value in values[:pk_width]):
@@ -970,9 +995,7 @@ class Component(ComponentBase):
 
     @staticmethod
     def _base_type_for(name: str, kind: str) -> BaseType:
-        lowered = name.lower()
-        if kind == "string" and any(hint in lowered for hint in _TIMESTAMP_COLUMN_HINTS):
-            # creationTime / changeTime / taxDate / visitTime … are ISO strings.
+        if kind == "timestamp":
             return BaseType.timestamp()
         if kind == "integer":
             return BaseType.integer()
@@ -989,11 +1012,19 @@ class Component(ComponentBase):
         return list(primary_key) + sorted(column for column in columns if column not in seen)
 
     @staticmethod
-    def _serialize_cell(value: object, is_primary_key: bool) -> object:
+    def _serialize_cell(value: object, is_primary_key: bool, is_timestamp: bool = False) -> object:
         if value is None:
             value = ""
         elif isinstance(value, bool):
             value = "true" if value else "false"
+        elif is_timestamp and value != "":
+            # Shoptet writes offsets without a colon ("2018-05-29T09:02:27+0200").
+            # Snowflake rejects that spelling outright — "Timestamp ... is not
+            # recognized" — which fails the entire table load, so the offset is
+            # normalised to "+02:00" here rather than hoping the warehouse copes.
+            parsed = _parse_api_timestamp(value)
+            if parsed is not None:
+                value = parsed.isoformat(sep=" ")
         if is_primary_key and value == "":
             return _EMPTY_PK_PLACEHOLDER
         return value

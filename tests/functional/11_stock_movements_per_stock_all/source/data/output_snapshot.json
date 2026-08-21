@@ -8,7 +8,7 @@
         "126222",
         "21.505",
         "0.505",
-        "2018-05-29T09:02:27+0200",
+        "2018-05-29 09:02:27+02:00",
         "novak@shoptet.cz",
         "1b02cb8e-d7b5-11e0-9a5c-feab5ed617ed",
         "2017000049",
@@ -16,9 +16,9 @@
         "1b02cb8e-d7b5-11e0-9a5c-feab5ed617ed",
         "30.505"
       ],
-      "hash": "sha256:169bd79e184ab59f954dc3a22c97d15f36d9a3f8dd7a7ced1bb05c46cfe14c50",
+      "hash": "sha256:76586983d954e175b961fc3824310f261309fe98b292bbfe790b5b6dcf07ab33",
       "row_count": 3,
-      "size_bytes": 492
+      "size_bytes": 495
     },
     "stock_movements.csv.manifest": {
       "columns": null,

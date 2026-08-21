@@ -1,3 +1,10 @@
 {
-  "last_run": "2026-08-20T12:00:00+0000"
+  "last_run": "2026-08-20T12:00:00+0000",
+  "column_kinds": {
+    "orders_changes": {
+      "code": "string",
+      "changeTime": "timestamp",
+      "changeType": "string"
+    }
+  }
 }

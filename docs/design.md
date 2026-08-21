@@ -400,3 +400,35 @@ table that appears only in some runs would otherwise be free to narrow.
 This resolves the open question recorded above under "Known limitation: column types are
 inferred per run" — the narrowing risk is closed at the source rather than left to
 Storage's tolerance.
+
+### Authoritative types exposed a broken timestamp contract
+
+Turning `dataTypeSupport` to `authoritative` made the first typed load fail outright:
+
+    Timestamp '2018-05-29T09:02:27+0200' is not recognized
+
+Shoptet writes ISO 8601 with a **colon-less** offset, which Snowflake refuses. Because a
+rejected value fails the whole table import, every object carrying `creationTime`,
+`changeTime`, `visitTime` or `taxDate` — most of them — would have been unloadable. It
+went unnoticed locally because the test suite compares the component's own CSV and
+manifest; nothing in it asks the warehouse whether the values are actually loadable.
+
+Two things were wrong:
+
+1. **The format.** Timestamp columns are now normalised on write to `YYYY-MM-DD
+   HH:MM:SS+HH:MM`, which Snowflake accepts.
+2. **How a timestamp was identified.** The type came from a *column-name* heuristic —
+   anything containing "time" or "date" was declared TIMESTAMP regardless of content.
+   That is both too eager (a `productOrdering` value like `alphabetically` sits in no
+   such column, but `dateFormat`-style names would) and dangerous under authoritative
+   types, since a mis-typed column fails the load rather than degrading. Typing is now
+   inferred from whether the value actually parses, consistent with how integer,
+   numeric and boolean are already inferred. A string that does not parse stays text, so
+   a mixed column degrades to STRING instead of breaking the import.
+
+Still unverified: a **null** timestamp. Shoptet declares most of these fields nullable,
+but the documentation mock returns fully-populated examples, so no run so far has loaded
+an empty value into a TIMESTAMP column. Empty cells are written as empty strings, and
+whether Storage coerces those to NULL for a typed column or rejects them has not been
+observed. This wants either a real e-shop with sparse data or a crafted fixture before a
+wide rollout — it is the one remaining known gap in the typed-output path.

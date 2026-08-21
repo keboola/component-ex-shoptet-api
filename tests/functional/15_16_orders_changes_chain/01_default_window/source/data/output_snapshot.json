@@ -5,12 +5,12 @@
     "orders_changes.csv": {
       "columns": [
         "201800001",
-        "2018-05-29T09:02:27+0200",
+        "2018-05-29 09:02:27+02:00",
         "edit"
       ],
-      "hash": "sha256:1a38ce32aca3ec8a70dc0db2b6227e43ed15d1362c5d5e582688a88899a806db",
+      "hash": "sha256:91cbccc92e56789a8eb09009a5f173e5b09fc0501ccba187ebfd611329860398",
       "row_count": 3,
-      "size_bytes": 123
+      "size_bytes": 126
     },
     "orders_changes.csv.manifest": {
       "columns": null,
