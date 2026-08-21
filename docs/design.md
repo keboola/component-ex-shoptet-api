@@ -473,3 +473,27 @@ shift under a downstream consumer because of a formatting change on our side.
 The cost is losing the native type on key columns (`id` arrives as STRING rather than
 INTEGER). That is the right trade: a string key is normal in Keboola and always loads,
 whereas a typed key is a load failure waiting for its first null.
+
+### Storage refuses a type change on an existing column
+
+Observed directly while re-testing: a table created when primary keys were still typed
+could not be re-loaded once they became STRING.
+
+    Table "…​.variant_parameters" column "id" has different type than the schema.
+    Table type: "INTEGER", schema type: "STRING".
+
+This settles the question the audit had left open about whether Storage tolerates a
+changing declared type between loads. It does not — it enforces the column's existing
+type and fails the load. Two consequences worth stating plainly:
+
+1. **The monotonic-widening fix is load-bearing, not defensive.** Per-run type inference
+   plus an enforcing warehouse means any column whose inferred type moves between runs
+   breaks that table permanently until someone intervenes.
+2. **Changing the component's typing rules is a breaking change.** Any future change to
+   how a type is derived — including tightening or relaxing the primary-key rule above —
+   invalidates existing tables in every customer project. Migrating means dropping and
+   recreating the affected tables, so such a change belongs in a major version with an
+   explicit note, never in a patch.
+
+The verification bucket was pointed at a fresh `default_bucket` to get clean tables for
+this reason, rather than the failure being worked around.
