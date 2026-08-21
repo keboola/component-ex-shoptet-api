@@ -426,9 +426,29 @@ Two things were wrong:
    numeric and boolean are already inferred. A string that does not parse stays text, so
    a mixed column degrades to STRING instead of breaking the import.
 
-Still unverified: a **null** timestamp. Shoptet declares most of these fields nullable,
-but the documentation mock returns fully-populated examples, so no run so far has loaded
-an empty value into a TIMESTAMP column. Empty cells are written as empty strings, and
-whether Storage coerces those to NULL for a typed column or rejects them has not been
-observed. This wants either a real e-shop with sparse data or a crafted fixture before a
-wide rollout — it is the one remaining known gap in the typed-output path.
+#### Null timestamps: closed by construction, not by observation
+
+The documentation mock returns fully-populated examples, so no run has ever loaded an
+empty value into a TIMESTAMP column, and a null cannot be reproduced through it. Rather
+than leave that as an open risk, the argument is closed from the two halves that are
+checkable:
+
+1. **Keboola converts an empty CSV field to SQL NULL for a nullable typed column — but
+   only when the field is unquoted** (`,,`). A quoted empty (`""`) bypasses the null
+   marker, and for a TIMESTAMP or numeric column that is a failed load rather than a
+   NULL.
+2. **Python's csv writer only quotes a lone empty field**, to keep the row distinct from
+   a blank line. Every multi-column row emits `a,`, `,b`, `a,,c` — all unquoted.
+
+So the failure needs a **single-column** table. The narrowest object in the registry has
+two fields (`suppliers`, `price_lists`, `order_sources`, `mailing_lists`,
+`unsubscribed_emails`), primary-key cells are never empty (they carry a placeholder), and
+a child table always carries `row_number` plus at least one child field. Three invariants
+in `tests/test_registry_invariants.py` pin all of that, so a future object cannot reopen
+the hole silently.
+
+`unsubscribed_emails` is the sharpest real case — two columns, one of them a TIMESTAMP —
+and it is included in the platform smoke configuration for that reason.
+
+What remains genuinely unobserved is only the combination of a null timestamp *and* a
+real e-shop's sparse data. The mechanism is accounted for; the observation is not.

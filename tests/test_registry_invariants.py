@@ -31,12 +31,14 @@ whole test passes while proving nothing.
 
 from __future__ import annotations
 
+import csv
+import io
 import json
 import re
 import unittest
 from pathlib import Path
 
-from component import _REGISTRY
+from component import _REGISTRY, _ROW_NUMBER_COLUMN, Component
 from configuration import ObjectType
 
 _FIXTURE_PATH = Path(__file__).parent / "fixtures" / "shoptet_field_extract.json"
@@ -218,3 +220,49 @@ class TestSyncActionsAreReachable(unittest.TestCase):
         wired = " ".join((self._CONFIG_DIR / name).read_text() for name in self._SCHEMAS)
         unreachable = sorted(action for action in declared if f'"{action}"' not in wired)
         self.assertEqual([], unreachable, "sync action(s) implemented but not reachable from any schema")
+
+
+class TestEmptyCellsCanBecomeNull(unittest.TestCase):
+    """Empty cells must reach Storage unquoted, or a typed column cannot be nulled.
+
+    Keboola converts an empty CSV field to SQL NULL for a nullable typed column —
+    but only when the field is *unquoted* (`,,`). Python's csv writer quotes a lone
+    empty field as `""` to distinguish the row from a blank line, and a quoted empty
+    bypasses the null marker, which for a TIMESTAMP or numeric column means a failed
+    load rather than a NULL.
+
+    That case is only reachable for a **single-column** table, so these two tests
+    pin the two halves of the argument: multi-column rows emit unquoted empties, and
+    no object in the registry can produce a single-column table.
+    """
+
+    def test_empty_cells_in_multi_column_rows_are_unquoted(self):
+        for row in (["a", ""], ["", "b"], ["a", "", "c"]):
+            buffer = io.StringIO()
+            csv.writer(buffer).writerow(row)
+            rendered = buffer.getvalue().rstrip("\r\n")
+            self.assertNotIn('""', rendered, f"{row!r} emitted a quoted empty: {rendered!r}")
+
+    def test_no_object_can_produce_a_single_column_table(self):
+        raw = json.loads(_FIXTURE_PATH.read_text())
+        narrow = {obj.value: raw[obj.value]["fields"] for obj in ObjectType if len(raw[obj.value]["fields"]) < 2}
+        self.assertEqual({}, narrow, "a single-column table would emit a quoted empty, which cannot be nulled")
+
+    def test_the_position_column_has_no_leading_underscore(self):
+        # Storage strips a leading underscore from a column name, so `_row_number`
+        # arrives as `row_number` — which silently invalidates every transformation
+        # written against the documented name. Pinned here because the mismatch is
+        # invisible locally: the component's own CSV and manifest agree with each
+        # other, and only Storage renames it.
+        self.assertFalse(
+            _ROW_NUMBER_COLUMN.startswith("_"),
+            "Storage would rename this column on import, diverging from the manifest",
+        )
+
+    def test_child_tables_carry_the_position_column(self):
+        # A child table's width is its parent keys + row_number + at least one child
+        # field, so it can never be the single-column case guarded above.
+        for obj, endpoint in _REGISTRY.items():
+            if endpoint.children:
+                child_key = Component._child_primary_key(Component.__new__(Component), endpoint)
+                self.assertIn(_ROW_NUMBER_COLUMN, child_key, obj.value)
