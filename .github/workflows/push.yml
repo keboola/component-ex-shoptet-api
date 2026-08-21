@@ -12,8 +12,8 @@ jobs:
   ci:
     uses: keboola/component-ci/.github/workflows/component-pipeline.yml@master
     with:
-      app_id: kds-team.ex-shoptet-api
-      vendor: kds-team
+      app_id: keboola.ex-shoptet-api
+      vendor: keboola
       test_build_target: test
       docker_build_target: production
     secrets: inherit
