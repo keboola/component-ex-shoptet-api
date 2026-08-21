@@ -15,6 +15,10 @@ repos:
         types: [python]
         pass_filenames: false
 
+      # Hard gate, unlike the template's `|| true`: that softening exists for legacy
+      # components being retrofitted, where a backlog of type errors would block every
+      # commit. This component was type-clean from its first commit, so there is no
+      # backlog to grandfather in and no reason to let one accumulate.
       - id: ty-check
         name: ty type check
         entry: uv run ty check

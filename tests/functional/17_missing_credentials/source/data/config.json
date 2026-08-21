@@ -1,0 +1,8 @@
+{
+  "action": "run",
+  "parameters": {
+    "api_base_url": "https://api.docs.shoptet.com/_mock/shoptet-api/openapi",
+    "object": "categories",
+    "load_type": "full_load"
+  }
+}

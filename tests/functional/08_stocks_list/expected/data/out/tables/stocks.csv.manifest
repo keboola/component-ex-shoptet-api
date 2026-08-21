@@ -1,0 +1,65 @@
+{
+  "incremental": false,
+  "write_always": false,
+  "delimiter": ",",
+  "enclosure": "\"",
+  "manifest_type": "out",
+  "has_header": false,
+  "schema": [
+    {
+      "name": "id",
+      "data_type": {
+        "base": {
+          "type": "STRING"
+        }
+      },
+      "nullable": true,
+      "primary_key": true
+    },
+    {
+      "name": "deliveryPointAddress",
+      "data_type": {
+        "base": {
+          "type": "STRING"
+        }
+      },
+      "nullable": true
+    },
+    {
+      "name": "deliveryPointTitle",
+      "data_type": {
+        "base": {
+          "type": "STRING"
+        }
+      },
+      "nullable": true
+    },
+    {
+      "name": "isDeliveryPoint",
+      "data_type": {
+        "base": {
+          "type": "BOOLEAN"
+        }
+      },
+      "nullable": true
+    },
+    {
+      "name": "title",
+      "data_type": {
+        "base": {
+          "type": "STRING"
+        }
+      },
+      "nullable": true
+    },
+    {
+      "name": "visibleOnEshop",
+      "data_type": {
+        "base": {
+          "type": "BOOLEAN"
+        }
+      },
+      "nullable": true
+    }
+  ]
+}

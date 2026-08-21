@@ -1,0 +1,1630 @@
+{
+  "_meta": {
+    "contents": "See scripts/regenerate_field_extract.py. Backs tests/test_registry_invariants.py.",
+    "regenerate": "uv run python scripts/regenerate_field_extract.py (--check to verify freshness)",
+    "source": "https://api.docs.shoptet.com/_bundle/Shoptet%20API/openapi.json",
+    "spec_version": "d5b9773"
+  },
+  "abandoned_carts": {
+    "documented_include_sections": [],
+    "fields": [
+      "age",
+      "cartValue",
+      "coupon",
+      "customer",
+      "date",
+      "items",
+      "lastStep",
+      "returns"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": null,
+    "required": [
+      "age",
+      "cartValue",
+      "coupon",
+      "customer",
+      "date",
+      "items",
+      "lastStep",
+      "returns"
+    ]
+  },
+  "article_sections": {
+    "documented_include_sections": [],
+    "fields": [
+      "id",
+      "language",
+      "title"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": null,
+    "required": [
+      "id",
+      "title"
+    ]
+  },
+  "articles": {
+    "documented_include_sections": [],
+    "fields": [
+      "defaultSectionId",
+      "id",
+      "image",
+      "publishDate",
+      "sectionId",
+      "title",
+      "url",
+      "visible"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": 10,
+    "required": [
+      "id",
+      "publishDate",
+      "title",
+      "visible"
+    ]
+  },
+  "brands": {
+    "documented_include_sections": [],
+    "fields": [
+      "brandWeb",
+      "contactEmail",
+      "description",
+      "europeanResellerContactEmail",
+      "europeanResellerManufacturingCompanyName",
+      "europeanResellerPostalAddress",
+      "guid",
+      "indexName",
+      "manufacturingCompanyName",
+      "metaDescription",
+      "metaTitle",
+      "name",
+      "postalAddress",
+      "showInBrandList",
+      "showInCategoriesMenu"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": 1000,
+    "required": [
+      "brandWeb",
+      "description",
+      "guid",
+      "indexName",
+      "metaDescription",
+      "metaTitle",
+      "name",
+      "showInBrandList",
+      "showInCategoriesMenu"
+    ]
+  },
+  "categories": {
+    "documented_include_sections": [],
+    "fields": [
+      "catalogueMapping",
+      "customerVisibility",
+      "description",
+      "guid",
+      "image",
+      "indexName",
+      "menuTitle",
+      "metaTagDescription",
+      "name",
+      "parentGuid",
+      "priority",
+      "productOrdering",
+      "relatedProductsCategory",
+      "secondDescription",
+      "similarProductsCategory",
+      "title",
+      "url",
+      "visible"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": 1000,
+    "required": [
+      "catalogueMapping",
+      "customerVisibility",
+      "description",
+      "guid",
+      "image",
+      "indexName",
+      "menuTitle",
+      "metaTagDescription",
+      "name",
+      "parentGuid",
+      "priority",
+      "productOrdering",
+      "relatedProductsCategory",
+      "secondDescription",
+      "similarProductsCategory",
+      "title",
+      "url",
+      "visible"
+    ]
+  },
+  "consumption_taxes": {
+    "documented_include_sections": [],
+    "fields": [
+      "created",
+      "currency",
+      "id",
+      "isVisible",
+      "name",
+      "price",
+      "updated"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": null,
+    "required": [
+      "created",
+      "currency",
+      "id",
+      "isVisible",
+      "name",
+      "price",
+      "updated"
+    ]
+  },
+  "credit_notes": {
+    "documented_include_sections": [
+      "surchargeParameters"
+    ],
+    "fields": [
+      "addressesEqual",
+      "billingAddress",
+      "billingMethod",
+      "changeTime",
+      "code",
+      "completePackageWeight",
+      "constSymbol",
+      "creationTime",
+      "customer",
+      "deliveryAddress",
+      "documentRemark",
+      "dueDate",
+      "eshop",
+      "invoiceCode",
+      "isValid",
+      "items",
+      "orderCode",
+      "price",
+      "proofPaymentCode",
+      "reasonRemark",
+      "restocked",
+      "specSymbol",
+      "stockAmountChangeType",
+      "taxDate",
+      "varSymbol",
+      "vatMode",
+      "vatPayer",
+      "weight"
+    ],
+    "has_include_param": true,
+    "items_per_page_cap": null,
+    "required": [
+      "addressesEqual",
+      "billingAddress",
+      "billingMethod",
+      "changeTime",
+      "code",
+      "completePackageWeight",
+      "constSymbol",
+      "creationTime",
+      "customer",
+      "deliveryAddress",
+      "documentRemark",
+      "dueDate",
+      "eshop",
+      "invoiceCode",
+      "isValid",
+      "items",
+      "orderCode",
+      "price",
+      "proofPaymentCode",
+      "specSymbol",
+      "stockAmountChangeType",
+      "taxDate",
+      "varSymbol",
+      "vatPayer",
+      "weight"
+    ]
+  },
+  "credit_notes_changes": {
+    "documented_include_sections": [],
+    "fields": [
+      "changeTime",
+      "changeType",
+      "code"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": 20,
+    "required": [
+      "changeTime",
+      "changeType",
+      "code"
+    ]
+  },
+  "customer_groups": {
+    "documented_include_sections": [],
+    "fields": [
+      "authRequired",
+      "customerGroupCode",
+      "defaultDueDays",
+      "defaultOrderStatusId",
+      "defaultPricelistId",
+      "description",
+      "emailNotification",
+      "fullProfileRequired",
+      "id",
+      "maxDiscount",
+      "name",
+      "priority",
+      "registrationAllowed",
+      "tableLayout",
+      "wholesale"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": null,
+    "required": [
+      "authRequired",
+      "customerGroupCode",
+      "defaultDueDays",
+      "defaultOrderStatusId",
+      "defaultPricelistId",
+      "description",
+      "emailNotification",
+      "fullProfileRequired",
+      "id",
+      "maxDiscount",
+      "name",
+      "priority",
+      "registrationAllowed",
+      "tableLayout",
+      "wholesale"
+    ]
+  },
+  "customer_regions": {
+    "documented_include_sections": [],
+    "fields": [
+      "countryCode",
+      "id",
+      "regionName",
+      "regionShortcut"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": null,
+    "required": [
+      "countryCode",
+      "id",
+      "regionName",
+      "regionShortcut"
+    ]
+  },
+  "customers": {
+    "documented_include_sections": [],
+    "fields": [
+      "accounts",
+      "adminUrl",
+      "billingAddress",
+      "birthDate",
+      "changeTime",
+      "creationTime",
+      "customerGroup",
+      "deliveryAddress",
+      "disabledOrders",
+      "guid",
+      "priceList",
+      "priceRatio",
+      "remark",
+      "remarks"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": null,
+    "required": [
+      "accounts",
+      "adminUrl",
+      "billingAddress",
+      "birthDate",
+      "changeTime",
+      "creationTime",
+      "customerGroup",
+      "deliveryAddress",
+      "disabledOrders",
+      "guid",
+      "priceList",
+      "priceRatio",
+      "remark",
+      "remarks"
+    ]
+  },
+  "customers_changes": {
+    "documented_include_sections": [],
+    "fields": [
+      "changeTime",
+      "changeType",
+      "guid"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": 20,
+    "required": [
+      "changeTime",
+      "changeType",
+      "guid"
+    ]
+  },
+  "delivery_notes": {
+    "documented_include_sections": [],
+    "fields": [
+      "addressesEqual",
+      "billingAddress",
+      "changeTime",
+      "code",
+      "creationTime",
+      "customer",
+      "deliveryAddress",
+      "documentRemark",
+      "isValid",
+      "items",
+      "orderCode"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": null,
+    "required": [
+      "addressesEqual",
+      "billingAddress",
+      "changeTime",
+      "code",
+      "creationTime",
+      "customer",
+      "deliveryAddress",
+      "documentRemark",
+      "isValid",
+      "items",
+      "orderCode"
+    ]
+  },
+  "discount_coupons": {
+    "documented_include_sections": [],
+    "fields": [
+      "amount",
+      "code",
+      "creationTime",
+      "currency",
+      "discountType",
+      "minPrice",
+      "ratio",
+      "remark",
+      "reusable",
+      "shippingPrice",
+      "template",
+      "usedCount",
+      "validFrom",
+      "validTo"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": 1000,
+    "required": [
+      "amount",
+      "code",
+      "creationTime",
+      "currency",
+      "discountType",
+      "minPrice",
+      "ratio",
+      "remark",
+      "reusable",
+      "shippingPrice",
+      "template",
+      "usedCount",
+      "validFrom",
+      "validTo"
+    ]
+  },
+  "discussion_posts": {
+    "documented_include_sections": [],
+    "fields": [
+      "articleId",
+      "authorized",
+      "content",
+      "creationDate",
+      "customerGuid",
+      "email",
+      "id",
+      "name",
+      "pageId",
+      "parentId",
+      "productGuid",
+      "title"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": 100,
+    "required": [
+      "articleId",
+      "authorized",
+      "content",
+      "creationDate",
+      "customerGuid",
+      "email",
+      "id",
+      "name",
+      "pageId",
+      "parentId",
+      "productGuid",
+      "title"
+    ]
+  },
+  "eshop": {
+    "documented_include_sections": [
+      "orderAdditionalFields",
+      "orderStatuses",
+      "paymentMethods",
+      "shippingMethods",
+      "imageCuts",
+      "countries",
+      "cashDesk"
+    ],
+    "fields": [
+      "activeModules",
+      "billingInformation",
+      "cashDesk",
+      "contactInformation",
+      "countries",
+      "currencies",
+      "imageCuts",
+      "languages",
+      "orderAdditionalFields",
+      "orderStatuses",
+      "paymentMethods",
+      "settings",
+      "shippingMethods",
+      "socialNetworks",
+      "taxClasses",
+      "trial",
+      "urls"
+    ],
+    "has_include_param": true,
+    "items_per_page_cap": null,
+    "required": [
+      "activeModules",
+      "contactInformation",
+      "currencies",
+      "settings",
+      "taxClasses",
+      "urls"
+    ]
+  },
+  "filtering_parameters": {
+    "documented_include_sections": [],
+    "fields": [
+      "code",
+      "description",
+      "displayName",
+      "googleMapping",
+      "id",
+      "name",
+      "priority",
+      "values"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": 100,
+    "required": [
+      "code",
+      "description",
+      "displayName",
+      "googleMapping",
+      "id",
+      "name",
+      "priority",
+      "values"
+    ]
+  },
+  "invoices": {
+    "documented_include_sections": [
+      "surchargeParameters"
+    ],
+    "fields": [
+      "addressesEqual",
+      "billingAddress",
+      "billingMethod",
+      "changeTime",
+      "code",
+      "completePackageWeight",
+      "constSymbol",
+      "creationTime",
+      "customer",
+      "deliveryAddress",
+      "documentRemark",
+      "dueDate",
+      "eshop",
+      "isValid",
+      "items",
+      "orderCode",
+      "paid",
+      "price",
+      "proformaInvoiceCodes",
+      "proofPayments",
+      "specSymbol",
+      "taxDate",
+      "varSymbol",
+      "vatMode",
+      "vatPayer",
+      "weight"
+    ],
+    "has_include_param": true,
+    "items_per_page_cap": null,
+    "required": [
+      "addressesEqual",
+      "billingAddress",
+      "billingMethod",
+      "changeTime",
+      "code",
+      "completePackageWeight",
+      "constSymbol",
+      "creationTime",
+      "customer",
+      "deliveryAddress",
+      "documentRemark",
+      "dueDate",
+      "eshop",
+      "isValid",
+      "items",
+      "orderCode",
+      "paid",
+      "price",
+      "proformaInvoiceCodes",
+      "specSymbol",
+      "taxDate",
+      "varSymbol",
+      "vatPayer",
+      "weight"
+    ]
+  },
+  "invoices_changes": {
+    "documented_include_sections": [],
+    "fields": [
+      "changeTime",
+      "changeType",
+      "code"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": 20,
+    "required": [
+      "changeTime",
+      "changeType",
+      "code"
+    ]
+  },
+  "mailing_lists": {
+    "documented_include_sections": [],
+    "fields": [
+      "code",
+      "name"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": null,
+    "required": [
+      "code",
+      "name"
+    ]
+  },
+  "order_history": {
+    "documented_include_sections": [],
+    "fields": [
+      "creationTime",
+      "id",
+      "orderCode",
+      "system",
+      "text",
+      "type",
+      "user"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": null,
+    "required": [
+      "creationTime",
+      "id",
+      "orderCode",
+      "system",
+      "text",
+      "type",
+      "user"
+    ]
+  },
+  "order_sources": {
+    "documented_include_sections": [],
+    "fields": [
+      "id",
+      "name"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": null,
+    "required": [
+      "id",
+      "name"
+    ]
+  },
+  "order_statuses": {
+    "documented_include_sections": [],
+    "fields": [
+      "backgroundColor",
+      "changeOrderItems",
+      "color",
+      "documents",
+      "id",
+      "markAsPaid",
+      "name",
+      "order",
+      "stockClaimResolved",
+      "system"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": null,
+    "required": [
+      "changeOrderItems",
+      "documents",
+      "id",
+      "markAsPaid",
+      "name",
+      "order",
+      "stockClaimResolved",
+      "system"
+    ]
+  },
+  "orders": {
+    "documented_include_sections": [
+      "notes",
+      "images",
+      "shippingDetails",
+      "stockLocation",
+      "surchargeParameters",
+      "productFlags"
+    ],
+    "fields": [
+      "addressesEqual",
+      "adminUrl",
+      "billingAddress",
+      "billingMethod",
+      "birthDate",
+      "cashDeskOrder",
+      "changeTime",
+      "clientIPAddress",
+      "code",
+      "completion",
+      "creationTime",
+      "customerGuid",
+      "deliveryAddress",
+      "email",
+      "externalCode",
+      "guid",
+      "items",
+      "language",
+      "notes",
+      "onlinePaymentLink",
+      "paid",
+      "paymentMethod",
+      "paymentMethods",
+      "paymentTransactions",
+      "phone",
+      "preAuthorization",
+      "price",
+      "referer",
+      "salesChannelGuid",
+      "shipping",
+      "shippingDetails",
+      "shippings",
+      "source",
+      "status",
+      "stockId",
+      "vatMode",
+      "vatPayer"
+    ],
+    "has_include_param": true,
+    "items_per_page_cap": null,
+    "required": [
+      "addressesEqual",
+      "adminUrl",
+      "billingAddress",
+      "billingMethod",
+      "cashDeskOrder",
+      "changeTime",
+      "clientIPAddress",
+      "code",
+      "creationTime",
+      "customerGuid",
+      "deliveryAddress",
+      "email",
+      "externalCode",
+      "guid",
+      "items",
+      "paid",
+      "paymentMethod",
+      "phone",
+      "price",
+      "shipping",
+      "status",
+      "stockId",
+      "vatPayer"
+    ]
+  },
+  "orders_changes": {
+    "documented_include_sections": [],
+    "fields": [
+      "changeTime",
+      "changeType",
+      "code"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": 1000,
+    "required": [
+      "changeTime",
+      "changeType",
+      "code"
+    ]
+  },
+  "pages": {
+    "documented_include_sections": [],
+    "fields": [
+      "id",
+      "ogImage",
+      "title",
+      "url",
+      "visible"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": 20,
+    "required": [
+      "id",
+      "title"
+    ]
+  },
+  "parametric_categories": {
+    "documented_include_sections": [],
+    "fields": [
+      "description",
+      "guid",
+      "image",
+      "indexName",
+      "metaTagDescription",
+      "name",
+      "originalCategoryGuid",
+      "parameters",
+      "secondDescription",
+      "showInDetail",
+      "showInList",
+      "title",
+      "url"
+    ],
+    "has_include_param": true,
+    "items_per_page_cap": 100,
+    "required": [
+      "description",
+      "guid",
+      "image",
+      "indexName",
+      "metaTagDescription",
+      "name",
+      "originalCategoryGuid",
+      "secondDescription",
+      "showInDetail",
+      "showInList",
+      "title",
+      "url"
+    ]
+  },
+  "payment_methods": {
+    "documented_include_sections": [],
+    "fields": [
+      "description",
+      "guid",
+      "logoUrl",
+      "name",
+      "paymentType",
+      "priority",
+      "submethod",
+      "visible",
+      "wholesale"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": null,
+    "required": [
+      "description",
+      "guid",
+      "logoUrl",
+      "name",
+      "paymentType",
+      "submethod",
+      "visible",
+      "wholesale"
+    ]
+  },
+  "price_lists": {
+    "documented_include_sections": [],
+    "fields": [
+      "id",
+      "name"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": null,
+    "required": [
+      "id",
+      "name"
+    ]
+  },
+  "product_availabilities": {
+    "documented_include_sections": [],
+    "fields": [
+      "color",
+      "deliveryInHours",
+      "description",
+      "googleAvailability",
+      "id",
+      "indexName",
+      "name",
+      "onStockInHours",
+      "system"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": null,
+    "required": [
+      "color",
+      "deliveryInHours",
+      "description",
+      "googleAvailability",
+      "id",
+      "name",
+      "onStockInHours",
+      "system"
+    ]
+  },
+  "product_flags": {
+    "documented_include_sections": [],
+    "fields": [
+      "code",
+      "color",
+      "showInCategory",
+      "showInDetail",
+      "system",
+      "title"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": null,
+    "required": [
+      "code",
+      "color",
+      "showInCategory",
+      "showInDetail",
+      "system",
+      "title"
+    ]
+  },
+  "product_measure_units": {
+    "documented_include_sections": [],
+    "fields": [
+      "id",
+      "priority",
+      "ratios",
+      "unitName"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": null,
+    "required": [
+      "id",
+      "priority",
+      "ratios",
+      "unitName"
+    ]
+  },
+  "product_pricelist_prices": {
+    "documented_include_sections": [],
+    "fields": [
+      "code",
+      "currencyCode",
+      "includingVat",
+      "orderableAmount",
+      "price",
+      "prices",
+      "productGuid",
+      "productId",
+      "sales",
+      "vatRate"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": null,
+    "required": [
+      "code",
+      "currencyCode",
+      "includingVat",
+      "orderableAmount",
+      "price",
+      "productGuid",
+      "productId",
+      "sales",
+      "vatRate"
+    ]
+  },
+  "product_units": {
+    "documented_include_sections": [],
+    "fields": [
+      "id",
+      "name",
+      "system"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": null,
+    "required": [
+      "id",
+      "name",
+      "system"
+    ]
+  },
+  "product_warranties": {
+    "documented_include_sections": [],
+    "fields": [
+      "description",
+      "id",
+      "inMonths",
+      "system"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": null,
+    "required": [
+      "description",
+      "id",
+      "inMonths",
+      "system"
+    ]
+  },
+  "products": {
+    "documented_include_sections": [
+      "images",
+      "variantParameters",
+      "allCategories",
+      "flags",
+      "descriptiveParameters",
+      "measureUnit",
+      "surchargeParameters",
+      "setItems",
+      "filteringParameters",
+      "recyclingFee",
+      "consumptionTax",
+      "warranty",
+      "sortVariants",
+      "gifts",
+      "alternativeProducts",
+      "relatedProducts",
+      "relatedVideos",
+      "relatedFiles",
+      "perStockAmounts",
+      "perPricelistPrices"
+    ],
+    "fields": [
+      "additionalName",
+      "adult",
+      "allowIPlatba",
+      "allowOnlinePayments",
+      "alternativeProducts",
+      "atypicalBilling",
+      "atypicalShipping",
+      "brand",
+      "categories",
+      "changeTime",
+      "conditionDescription",
+      "conditionGrade",
+      "creationTime",
+      "defaultCategory",
+      "description",
+      "descriptiveParameters",
+      "filteringParameters",
+      "flags",
+      "gifts",
+      "guid",
+      "hsCode",
+      "images",
+      "indexName",
+      "internalNote",
+      "isVariant",
+      "metaDescription",
+      "metaTitle",
+      "name",
+      "preauthorizationRequired",
+      "relatedFiles",
+      "relatedProducts",
+      "relatedVideos",
+      "setItems",
+      "shortDescription",
+      "sizeIdName",
+      "supplier",
+      "surchargeParameters",
+      "type",
+      "url",
+      "variants",
+      "visibility",
+      "voteAverageScore",
+      "voteCount",
+      "warranty",
+      "xmlFeedName"
+    ],
+    "has_include_param": true,
+    "items_per_page_cap": null,
+    "required": [
+      "brand",
+      "changeTime",
+      "creationTime",
+      "defaultCategory",
+      "description",
+      "guid",
+      "hsCode",
+      "internalNote",
+      "metaDescription",
+      "shortDescription",
+      "supplier",
+      "type",
+      "url",
+      "variants",
+      "visibility"
+    ]
+  },
+  "products_changes": {
+    "documented_include_sections": [],
+    "fields": [
+      "changeTime",
+      "changeType",
+      "guid"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": 1000,
+    "required": [
+      "changeTime",
+      "changeType",
+      "guid"
+    ]
+  },
+  "proforma_invoices": {
+    "documented_include_sections": [
+      "surchargeParameters"
+    ],
+    "fields": [
+      "addressesEqual",
+      "billingAddress",
+      "billingMethod",
+      "changeTime",
+      "code",
+      "completePackageWeight",
+      "constSymbol",
+      "creationTime",
+      "customer",
+      "deliveryAddress",
+      "documentRemark",
+      "dueDate",
+      "eshop",
+      "isValid",
+      "items",
+      "orderCode",
+      "paid",
+      "price",
+      "specSymbol",
+      "varSymbol",
+      "vatMode",
+      "vatPayer",
+      "weight"
+    ],
+    "has_include_param": true,
+    "items_per_page_cap": null,
+    "required": [
+      "addressesEqual",
+      "billingAddress",
+      "billingMethod",
+      "changeTime",
+      "code",
+      "completePackageWeight",
+      "constSymbol",
+      "creationTime",
+      "customer",
+      "deliveryAddress",
+      "documentRemark",
+      "dueDate",
+      "eshop",
+      "isValid",
+      "items",
+      "orderCode",
+      "paid",
+      "price",
+      "specSymbol",
+      "varSymbol",
+      "vatPayer",
+      "weight"
+    ]
+  },
+  "proforma_invoices_changes": {
+    "documented_include_sections": [],
+    "fields": [
+      "changeTime",
+      "changeType",
+      "code"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": 20,
+    "required": [
+      "changeTime",
+      "changeType",
+      "code"
+    ]
+  },
+  "proof_payments": {
+    "documented_include_sections": [],
+    "fields": [
+      "bankAccount",
+      "bic",
+      "billAdditional",
+      "billBankAccount",
+      "billBic",
+      "billCity",
+      "billCompany",
+      "billCountryCode",
+      "billDistrict",
+      "billFullName",
+      "billHouseNumber",
+      "billIban",
+      "billRegionName",
+      "billRegionShortcut",
+      "billStreet",
+      "billZip",
+      "billingMethod",
+      "cashdeskId",
+      "closed",
+      "code",
+      "companyId",
+      "constSymbol",
+      "createdAt",
+      "currencyCode",
+      "customerGuid",
+      "customerProfileId",
+      "documentRemark",
+      "email",
+      "iban",
+      "identificationNumber",
+      "invoiceCode",
+      "invoicingExchangeRate",
+      "isValid",
+      "issueDate",
+      "language",
+      "orderCode",
+      "payment",
+      "phone",
+      "proformaInvoiceCode",
+      "remark",
+      "source",
+      "specSymbol",
+      "taxDate",
+      "taxId",
+      "updatedAt",
+      "varSymbol",
+      "vatBreakdown",
+      "vatId",
+      "vatMode"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": null,
+    "required": [
+      "bankAccount",
+      "bic",
+      "billAdditional",
+      "billBankAccount",
+      "billBic",
+      "billCity",
+      "billCompany",
+      "billCountryCode",
+      "billDistrict",
+      "billFullName",
+      "billHouseNumber",
+      "billIban",
+      "billRegionName",
+      "billRegionShortcut",
+      "billStreet",
+      "billZip",
+      "billingMethod",
+      "cashdeskId",
+      "closed",
+      "code",
+      "companyId",
+      "constSymbol",
+      "createdAt",
+      "currencyCode",
+      "customerGuid",
+      "customerProfileId",
+      "documentRemark",
+      "email",
+      "iban",
+      "identificationNumber",
+      "invoiceCode",
+      "invoicingExchangeRate",
+      "isValid",
+      "issueDate",
+      "orderCode",
+      "payment",
+      "phone",
+      "proformaInvoiceCode",
+      "remark",
+      "source",
+      "specSymbol",
+      "taxDate",
+      "taxId",
+      "updatedAt",
+      "varSymbol",
+      "vatBreakdown",
+      "vatId"
+    ]
+  },
+  "proof_payments_changes": {
+    "documented_include_sections": [],
+    "fields": [
+      "changeTime",
+      "changeType",
+      "code"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": 20,
+    "required": [
+      "changeTime",
+      "changeType",
+      "code"
+    ]
+  },
+  "quantity_discounts": {
+    "documented_include_sections": [],
+    "fields": [
+      "customerGroups",
+      "id",
+      "includeUnregisteredCustomers",
+      "isActive",
+      "priority",
+      "status",
+      "targetingLevel",
+      "title",
+      "validFrom",
+      "validTo"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": 20,
+    "required": [
+      "customerGroups",
+      "id",
+      "includeUnregisteredCustomers",
+      "isActive",
+      "priority",
+      "status",
+      "title",
+      "validFrom",
+      "validTo"
+    ]
+  },
+  "recycling_fee_categories": {
+    "documented_include_sections": [],
+    "fields": [
+      "category",
+      "currency",
+      "fee",
+      "id",
+      "unit"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": null,
+    "required": [
+      "category",
+      "currency",
+      "fee",
+      "id",
+      "unit"
+    ]
+  },
+  "reviews_products": {
+    "documented_include_sections": [],
+    "fields": [
+      "authorized",
+      "customerGuid",
+      "date",
+      "description",
+      "email",
+      "fullName",
+      "guid",
+      "id",
+      "orderCode",
+      "productGuid",
+      "productName",
+      "rating",
+      "reaction",
+      "updated",
+      "visible"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": 20,
+    "required": [
+      "authorized",
+      "customerGuid",
+      "date",
+      "description",
+      "email",
+      "fullName",
+      "guid",
+      "id",
+      "orderCode",
+      "productGuid",
+      "productName",
+      "rating",
+      "reaction",
+      "updated",
+      "visible"
+    ]
+  },
+  "reviews_project": {
+    "documented_include_sections": [],
+    "fields": [
+      "customerGuid",
+      "date",
+      "description",
+      "email",
+      "fullName",
+      "id",
+      "orderCode",
+      "rating",
+      "reaction",
+      "visible"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": 200,
+    "required": [
+      "customerGuid",
+      "date",
+      "description",
+      "email",
+      "fullName",
+      "id",
+      "orderCode",
+      "rating",
+      "reaction",
+      "visible"
+    ]
+  },
+  "sales_channels": {
+    "documented_include_sections": [],
+    "fields": [
+      "abilities",
+      "createdAt",
+      "currencies",
+      "guid",
+      "id",
+      "languages",
+      "name",
+      "type",
+      "updatedAt"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": null,
+    "required": [
+      "abilities",
+      "createdAt",
+      "currencies",
+      "guid",
+      "id",
+      "languages",
+      "name",
+      "type",
+      "updatedAt"
+    ]
+  },
+  "shipping_methods": {
+    "documented_include_sections": [],
+    "fields": [
+      "description",
+      "guid",
+      "logoUrl",
+      "name",
+      "priority",
+      "shippingCompany",
+      "trackingUrl",
+      "visible",
+      "wholesale"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": null,
+    "required": [
+      "description",
+      "guid",
+      "logoUrl",
+      "name",
+      "priority",
+      "shippingCompany",
+      "trackingUrl",
+      "visible",
+      "wholesale"
+    ]
+  },
+  "stock_movements": {
+    "documented_include_sections": [],
+    "fields": [
+      "actualAmount",
+      "amountChange",
+      "changeTime",
+      "changedBy",
+      "historicalProductGuid",
+      "id",
+      "orderCode",
+      "productCode",
+      "productGuid",
+      "sumAmount"
+    ],
+    "has_include_param": true,
+    "items_per_page_cap": 1000,
+    "required": [
+      "actualAmount",
+      "amountChange",
+      "changeTime",
+      "changedBy",
+      "id",
+      "productCode"
+    ]
+  },
+  "stock_supplies": {
+    "documented_include_sections": [],
+    "fields": [
+      "amount",
+      "changeTime",
+      "claim",
+      "code",
+      "location",
+      "productGuid"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": 1000,
+    "required": [
+      "amount",
+      "claim",
+      "code",
+      "productGuid"
+    ]
+  },
+  "stocks": {
+    "documented_include_sections": [],
+    "fields": [
+      "deliveryPointAddress",
+      "deliveryPointTitle",
+      "id",
+      "isDeliveryPoint",
+      "title",
+      "visibleOnEshop"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": null,
+    "required": [
+      "deliveryPointAddress",
+      "deliveryPointTitle",
+      "id",
+      "isDeliveryPoint",
+      "title",
+      "visibleOnEshop"
+    ]
+  },
+  "suppliers": {
+    "documented_include_sections": [],
+    "fields": [
+      "guid",
+      "name"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": 500,
+    "required": [
+      "guid",
+      "name"
+    ]
+  },
+  "surcharge_parameters": {
+    "documented_include_sections": [],
+    "fields": [
+      "code",
+      "currency",
+      "description",
+      "displayName",
+      "googleMapping",
+      "id",
+      "includingVat",
+      "name",
+      "priority",
+      "required",
+      "subscription",
+      "values"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": 500,
+    "required": [
+      "code",
+      "currency",
+      "description",
+      "displayName",
+      "googleMapping",
+      "id",
+      "includingVat",
+      "name",
+      "priority",
+      "required",
+      "values"
+    ]
+  },
+  "unsubscribed_emails": {
+    "documented_include_sections": [],
+    "fields": [
+      "email",
+      "unsubscribedAt"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": 1000,
+    "required": [
+      "email",
+      "unsubscribedAt"
+    ]
+  },
+  "variant_parameters": {
+    "documented_include_sections": [
+      "values"
+    ],
+    "fields": [
+      "displayName",
+      "id",
+      "paramIndex",
+      "paramName",
+      "priority",
+      "values"
+    ],
+    "has_include_param": true,
+    "items_per_page_cap": 100,
+    "required": [
+      "id",
+      "paramIndex",
+      "paramName",
+      "priority"
+    ]
+  },
+  "volume_discounts": {
+    "documented_include_sections": [],
+    "fields": [
+      "amount",
+      "currency",
+      "customerGroups",
+      "id",
+      "priceRatio"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": 20,
+    "required": [
+      "amount",
+      "currency",
+      "customerGroups",
+      "id",
+      "priceRatio"
+    ]
+  },
+  "xy_discounts": {
+    "documented_include_sections": [],
+    "fields": [
+      "customerGroups",
+      "id",
+      "includeUnregisteredCustomers",
+      "priority",
+      "title",
+      "usageCount",
+      "validFrom",
+      "validTo"
+    ],
+    "has_include_param": false,
+    "items_per_page_cap": 20,
+    "required": [
+      "customerGroups",
+      "id",
+      "includeUnregisteredCustomers",
+      "priority",
+      "title",
+      "validFrom",
+      "validTo"
+    ]
+  }
+}

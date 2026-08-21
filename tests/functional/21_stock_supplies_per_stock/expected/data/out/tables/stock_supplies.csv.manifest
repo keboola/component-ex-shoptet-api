@@ -1,0 +1,76 @@
+{
+  "incremental": false,
+  "write_always": false,
+  "delimiter": ",",
+  "enclosure": "\"",
+  "manifest_type": "out",
+  "has_header": false,
+  "schema": [
+    {
+      "name": "stock_id",
+      "data_type": {
+        "base": {
+          "type": "STRING"
+        }
+      },
+      "nullable": true,
+      "primary_key": true
+    },
+    {
+      "name": "productGuid",
+      "data_type": {
+        "base": {
+          "type": "STRING"
+        }
+      },
+      "nullable": true,
+      "primary_key": true
+    },
+    {
+      "name": "code",
+      "data_type": {
+        "base": {
+          "type": "STRING"
+        }
+      },
+      "nullable": true,
+      "primary_key": true
+    },
+    {
+      "name": "amount",
+      "data_type": {
+        "base": {
+          "type": "STRING"
+        }
+      },
+      "nullable": true
+    },
+    {
+      "name": "changeTime",
+      "data_type": {
+        "base": {
+          "type": "TIMESTAMP"
+        }
+      },
+      "nullable": true
+    },
+    {
+      "name": "claim",
+      "data_type": {
+        "base": {
+          "type": "STRING"
+        }
+      },
+      "nullable": true
+    },
+    {
+      "name": "location",
+      "data_type": {
+        "base": {
+          "type": "STRING"
+        }
+      },
+      "nullable": true
+    }
+  ]
+}

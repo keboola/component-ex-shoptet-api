@@ -1,0 +1,27 @@
+{
+  "files": {},
+  "hash_algorithm": "sha256",
+  "tables": {
+    "stock_supplies.csv": {
+      "columns": [
+        "1",
+        "1b02cb8e-d7b5-11e0-9a5c-feab5ed617ed",
+        "26/BIL",
+        "50",
+        "2018-05-29 09:02:27+02:00",
+        "5",
+        "A1"
+      ],
+      "hash": "sha256:542d3933961fa7d779ea1379b8e1a7cf922d72d63ba649c9955bacb11acbaa23",
+      "row_count": 3,
+      "size_bytes": 243
+    },
+    "stock_supplies.csv.manifest": {
+      "columns": null,
+      "hash": "sha256:d95879aea9f82350960ef44b9c8c71223a8bf6cdf003e4fdd795766384cff170",
+      "row_count": null,
+      "size_bytes": 1269
+    }
+  },
+  "version": "1.0"
+}

@@ -1,0 +1,35 @@
+{
+  "files": {},
+  "hash_algorithm": "sha256",
+  "tables": {
+    "customer_groups.csv": {
+      "columns": [
+        "1",
+        "true",
+        "wholesale",
+        "14",
+        "-2",
+        "1",
+        "Wholesale customers are the best customers",
+        "true",
+        "true",
+        "0.5500",
+        "Wholesale customers",
+        "100",
+        "true",
+        "true",
+        "true"
+      ],
+      "hash": "sha256:27c5d7bb8a197f2e3618e68470704f9b61a80b79cf5335db06d917bae863f3b0",
+      "row_count": 1,
+      "size_bytes": 125
+    },
+    "customer_groups.csv.manifest": {
+      "columns": null,
+      "hash": "sha256:eac9cd01c42e7970536ff346dcde6c6ad956a534c774e8e2d6f1f5b7dfc8d827",
+      "row_count": null,
+      "size_bytes": 2474
+    }
+  },
+  "version": "1.0"
+}

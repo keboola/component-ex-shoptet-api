@@ -1,0 +1,26 @@
+{
+  "files": {},
+  "hash_algorithm": "sha256",
+  "tables": {
+    "stocks.csv": {
+      "columns": [
+        "1",
+        "Main street 123, Prague",
+        "Main delivery point",
+        "false",
+        "Main stock",
+        "true"
+      ],
+      "hash": "sha256:6a00ee7b77226b417892442e80be7a205176d8ab14d6193b5ab70f2521d39cca",
+      "row_count": 1,
+      "size_bytes": 71
+    },
+    "stocks.csv.manifest": {
+      "columns": null,
+      "hash": "sha256:f3fe12b636fad547d28f3b691deeec771b61027ac15f4e4c0aafcef22015d774",
+      "row_count": null,
+      "size_bytes": 1097
+    }
+  },
+  "version": "1.0"
+}

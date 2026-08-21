@@ -1,1 +1,1 @@
-["genericDockerUI"]
+["genericDockerUI", "genericDockerUI-rows"]

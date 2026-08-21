@@ -1,0 +1,5 @@
+# VCR fixtures must stay byte-exact — the datadirtest replay compares recorded
+# output verbatim, and the component's CSV writer emits CRLF line endings. Disable
+# git's EOL normalization for the whole functional-test tree so a fresh CI clone
+# reproduces the exact bytes that were recorded.
+tests/functional/** -text

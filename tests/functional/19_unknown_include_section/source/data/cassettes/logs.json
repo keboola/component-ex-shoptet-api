@@ -1,0 +1,12 @@
+{
+  "exit_code": 1,
+  "stderr": "Unknown section(s) totallyInvalidSection for object 'orders'. Supported sections: notes, images, shippingDetails, stockLocation, surchargeParameters, productFlags.\n",
+  "logs": [
+    {
+      "level": "ERROR",
+      "logger": "__main__",
+      "message": "Unknown section(s) totallyInvalidSection for object 'orders'. Supported sections: notes, images, shippingDetails, stockLocation, surchargeParameters, productFlags.",
+      "timestamp": "2026-08-20T12:00:00.000Z"
+    }
+  ]
+}

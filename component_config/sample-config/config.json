@@ -1,21 +1,16 @@
 {
-  "storage": {
-    "input": {
-      "files": [],
-      "tables": [
-        {
-          "source": "in.c-example.example",
-          "destination": "example.csv"
-        }
-      ]
-    },
-    "output": {
-      "files": [],
-      "tables": []
-    }
-  },
   "parameters": {
-    "#api_token": "your-secret-token",
-    "debug": false
-  }
+    "auth_type": "private_token",
+    "#private_api_token": "your-private-api-token",
+    "object": "orders",
+    "load_type": "incremental_load",
+    "lookback_hours": 24,
+    "date_range": {
+      "date_from": "30 days ago",
+      "date_to": ""
+    },
+    "include": ["notes", "shippingDetails"],
+    "extract_child_tables": true
+  },
+  "action": "run"
 }

@@ -1,0 +1,12 @@
+{
+  "exit_code": 1,
+  "stderr": "Configuration validation error: : Value error, A private API token is required. Generate one in the e-shop administration under Connections \u2192 Private API (Shoptet Premium).\n",
+  "logs": [
+    {
+      "level": "ERROR",
+      "logger": "__main__",
+      "message": "Configuration validation error: : Value error, A private API token is required. Generate one in the e-shop administration under Connections \u2192 Private API (Shoptet Premium).",
+      "timestamp": "2026-08-20T12:00:00.000Z"
+    }
+  ]
+}

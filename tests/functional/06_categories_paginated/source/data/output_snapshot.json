@@ -1,0 +1,38 @@
+{
+  "files": {},
+  "hash_algorithm": "sha256",
+  "tables": {
+    "categories.csv": {
+      "columns": [
+        "0198418d-acde-708e-9389-0c5113d9b5f3",
+        "[{\"provider\": \"heureka\", \"category\": \"Clothing | Women's T-Shirts\"}]",
+        "all",
+        "<p>Horn\u00ed popis kategorie</p>",
+        "https://beta.shoptet.cz/user/categories/thumb/supreme-plush-santa-hat.jpg",
+        "sport-a-relax",
+        "Watches",
+        "T-shirts, cotton, M size, purple, pink, wine red",
+        "Category name",
+        "0198566d-2eeb-73ed-8dc4-0c94b5a7e035",
+        "1",
+        "alphabetically",
+        "07f7a4c1-d7b1-11e0-9a5c-feab5ed617ed",
+        "<p>Doln\u00ed popis kategorie</p>",
+        "07f7a4c1-d7b1-11e0-9a5c-feab5ed617ed",
+        "Purple M size T-shirts - cotton",
+        "https://beta.shoptet.cz/sport-a-relax",
+        "true"
+      ],
+      "hash": "sha256:9de7415c3f7bb2bcc9320f9e7995d8ad30b95ea273482bcbca2a17ba73ad21c0",
+      "row_count": 3,
+      "size_bytes": 1635
+    },
+    "categories.csv.manifest": {
+      "columns": null,
+      "hash": "sha256:b280b4059f7f02664793bc65fb633d384b8b4edac1d4e18d8bd10dca8ea3ed98",
+      "row_count": null,
+      "size_bytes": 2896
+    }
+  },
+  "version": "1.0"
+}

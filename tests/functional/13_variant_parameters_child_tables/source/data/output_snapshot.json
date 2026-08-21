@@ -1,0 +1,46 @@
+{
+  "files": {},
+  "hash_algorithm": "sha256",
+  "tables": {
+    "variant_parameters.csv": {
+      "columns": [
+        "1",
+        "Barva",
+        "color",
+        "Color",
+        "1"
+      ],
+      "hash": "sha256:7d352c268e0d9ea5a2222c16236fc2167c1364747012a49b0673a517cc9801f4",
+      "row_count": 3,
+      "size_bytes": 69
+    },
+    "variant_parameters.csv.manifest": {
+      "columns": null,
+      "hash": "sha256:c3c74281add9121b57acc6238fac1436d435477904a3d30aaf471888214d0b40",
+      "row_count": null,
+      "size_bytes": 923
+    },
+    "variant_parameters_values.csv": {
+      "columns": [
+        "1",
+        "1",
+        "#34ff34",
+        "1",
+        "https://www.domena-eshopu.cz/user/parameters/100.jpg",
+        "Color Red",
+        "color-red",
+        "1"
+      ],
+      "hash": "sha256:9f589e7c6ebf2785f2803b2a259e10edf82905c634acc186a7ec5eacc83d9887",
+      "row_count": 3,
+      "size_bytes": 270
+    },
+    "variant_parameters_values.csv.manifest": {
+      "columns": null,
+      "hash": "sha256:f5aff3b3bc663ad1eb03296bed422010da8f4479e6b58ea6896ea7ddb7ddafb9",
+      "row_count": null,
+      "size_bytes": 1393
+    }
+  },
+  "version": "1.0"
+}

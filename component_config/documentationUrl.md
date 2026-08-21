@@ -1,1 +1,1 @@
-/blob/master/README.md
+https://github.com/keboola/component-ex-shoptet-api/blob/main/README.md
